@@ -16,8 +16,6 @@
 #  If you use this code in your research, kindly refer to the 
 #  technical report.
 
-from pylab import sqrt, dot
-from numpy import subtract
 from scipy import *
 from copy import *
 from random import *
@@ -34,13 +32,12 @@ class CoverTree:
     #  should be the minimum distance between Nodes.
     #Output:
     #
-    def __init__(self, initpt, maxlevel, minlevel=None):
+    def __init__(self, distance, initpt, maxlevel, minlevel = -10):
+        self.distance = distance
         self.root = initpt
-        self.maxLevel = maxlevel
-        if(not minlevel == None):
-            self.minlevel = minlevel
-        else:
-            self.minlevel = -10
+        self.maxlevel = maxlevel
+        self.minlevel = minlevel
+
             
     #
     #Overview: insert an element p into the tree
@@ -49,7 +46,7 @@ class CoverTree:
     #Output: None
     #
     def insert(self, p):
-        return self.insert_rec(p, [self.root], self.maxLevel)
+        return self.insert_rec(p, [self.root], self.maxlevel)
 
     #
     #Overview: get the nearest neighbor of an element
@@ -69,7 +66,7 @@ class CoverTree:
     #          which it was found
     #
     def find(self, p):
-        return self.find_rec(p, [self.root], self.maxLevel)
+        return self.find_rec(p, [self.root], self.maxlevel)
 
 
     #
@@ -93,7 +90,7 @@ class CoverTree:
             #construct Q_i-1
             Qi_next = []
             for q in Q:
-                if(p.d(q) <= 2**i): #and q not in Qi_next):
+                if(self.distance(p.data, q.data) <= 2**i): #and q not in Qi_next):
                     Qi_next.append(q)
             d_p_Qi,elt = self.getDist(p, Qi)
             
@@ -101,7 +98,7 @@ class CoverTree:
             if(myIns and  d_p_Qi <= 2**i):
                 possParents = []
                 for q in Qi:
-                    if(p.d(q) <= 2**i):
+                    if(self.distance(p.data, q.data) <= 2**i):
                         possParents.append(q)
                         
                 myInst = randint(0, len(possParents)-1)
@@ -121,7 +118,7 @@ class CoverTree:
         Qcurr = [self.root]
         done = False
 
-        level = self.maxLevel
+        level = self.maxlevel
         Q = []
         while(not done):
 
@@ -137,7 +134,7 @@ class CoverTree:
             #create the next set
             Qnext = []
             for q in Q:
-                if(p.d(q) <= d_p_Q + 2**level):
+                if(self.distance(p.data, q.data) <= d_p_Q + 2**level):
                     Qnext.append(q)
             Qcurr = Qnext
 
@@ -189,8 +186,8 @@ class CoverTree:
             
             #find the minimum distance
             for q in j.getChildren(level):
-                if(p.d(q) <= d_p_Q):
-                    d_p_Q = p.d(q)
+                if(self.distance(p.data, q.data) <= d_p_Q):
+                    d_p_Q = self.distance(p.data, q.data)
 
         return Q, d_p_Q
 
@@ -206,8 +203,8 @@ class CoverTree:
         retQ = None
         for q in Qi:
 
-            if(p.d(q) <= d_p_Q and not q.data in excludeList):
-                d_p_Q = p.d(q)
+            if(self.distance(p.data, q.data) <= d_p_Q and not q.data in excludeList):
+                d_p_Q = self.distance(p.data, q.data)
                 retQ = q 
 
         return [d_p_Q,retQ]
@@ -223,7 +220,7 @@ class CoverTree:
             min_q = Q[0]
             
         for q in Q:
-            if(p.d(q) <= p.d(min_q)):
+            if(self.distance(p.data, q.data) <= self.distance(p.data, min_q.data)):
                 min_q = q
 
         return min_q 
@@ -239,7 +236,7 @@ class CoverTree:
     def printDotty(self):
         print "digraph {"
         self.printHash = {}
-        self.printTree([self.root], self.maxLevel)
+        self.printTree([self.root], self.maxlevel)
 
         for i in self.printHash.keys():
             print i
@@ -310,12 +307,6 @@ class Node:
     #returns the array representation of the Node
     def toarray(self):
         return self.data
-
-    #get the current form of distance between
-    #  nodes (can be overridden if necessary)
-    def d(self, q):
-        x = subtract(self.data, q.data)
-        return sqrt(dot(x, x))
 
     def __str__(self):
         return str(self.data)

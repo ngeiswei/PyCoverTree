@@ -27,6 +27,8 @@ from random import random, seed
 import time
 
 def distance(p, q):
+    # print "p =", p
+    # print "q =", q
     x = subtract(p, q)
     return sqrt(dot(x, x))
 
@@ -42,7 +44,7 @@ def test_covertree():
     gt = time.time
     
     t = gt()
-    ct = CoverTree(Node(pts[0]), 10)
+    ct = CoverTree(distance, Node(pts[0]), 10)
     for i in xrange(1, len(pts)):
         ct.insert(Node(pts[i]))
     b_t = gt() - t
@@ -52,18 +54,20 @@ def test_covertree():
     #cover-tree nearest neighbor
     t = gt()
     result = ct.nearest_neighbor(Node(query))
-    # print result
+    print "result =", result
     ct_t = gt() - t
     print "Time to run a cover tree NN query:", ct_t, "seconds"
     
     #standard nearest neighbor
     t = gt()
     resultNN = NN(query, pts, distance)
-    # print resultNN
+    print "resultNN =", resultNN
     n_t = gt() - t
     print "Time to run a naive NN query:", n_t, "seconds"
-    
-    if(result.d(Node(resultNN)) != 0):
+
+    print "result =", result
+    print "resultNN =", resultNN
+    if(distance(result.data, resultNN) != 0):
         print "This is bad"
         print result.data, "!=", resultNN
     else:

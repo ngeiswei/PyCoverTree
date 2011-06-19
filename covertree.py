@@ -16,6 +16,8 @@
 #  If you use this code in your research, kindly refer to the 
 #  technical report.
 
+from pylab import sqrt, dot
+from numpy import subtract
 from scipy import *
 from copy import *
 from random import *
@@ -275,7 +277,7 @@ class CoverTree:
 class Node:
     #data is an array of values
     def __init__(self, data=None):
-        self.data = array(data)
+        self.data = data
         self.children = {}
         self.parent = None
 
@@ -312,8 +314,8 @@ class Node:
     #get the current form of distance between
     #  nodes (can be overridden if necessary)
     def d(self, q):
-        x = self.data-q.data
-        return sqrt(dot(x, x)) 
+        x = subtract(self.data, q.data)
+        return sqrt(dot(x, x))
 
     def __str__(self):
         return str(self.data)

@@ -19,53 +19,67 @@
 #  technical report.
 
 from covertree import CoverTree, Node
+from naiveNN import NN
+from pylab import sqrt, dot, plot, show
+from numpy import subtract
+# from scipy import random
+from random import random, seed
 import time
-from nearest_neighbor import *
-from pylab import *
-from scipy import random
+
+def distance(p, q):
+    x = subtract(p, q)
+    return sqrt(dot(x, x))
 
 def test_covertree():
-    random.seed(1)
+    seed(1)
 
-    n_points = 10000
+    n_points = 1000
     
-    # fill an array of dimension (2, n_points) with random numbers in [0,1)
-    X = random.random((2, n_points))
+    pts = [(random(), random()) for _ in xrange(n_points)]
+
+    # print X
 
     gt = time.time
     
     t = gt()
-    ct = CoverTree(Node(X[:,0]), 10)
-    for i in range(1, len(X[0])):
-        ct.insert(Node(X[:,i]))
-    print "Time to build a cover tree of", n_points, "2D points:", gt() - t, "seconds"
+    ct = CoverTree(Node(pts[0]), 10)
+    for i in xrange(1, len(pts)):
+        ct.insert(Node(pts[i]))
+    b_t = gt() - t
+    print "Time to build a cover tree of", n_points, "2D points:", b_t, "seconds"
 
-    query = [0.5,0.5]
+    query = (0.5,0.5)
     #cover-tree nearest neighbor
     t = gt()
     result = ct.nearest_neighbor(Node(query))
-    print "Time to run a cover tree NN query:", gt() - t, "seconds"
+    # print result
+    ct_t = gt() - t
+    print "Time to run a cover tree NN query:", ct_t, "seconds"
     
     #standard nearest neighbor
     t = gt()
-    resultNN = NN(query, X)
-    print "Time to run a naive NN query:", gt() - t, "seconds"
+    resultNN = NN(query, pts, distance)
+    # print resultNN
+    n_t = gt() - t
+    print "Time to run a naive NN query:", n_t, "seconds"
     
     if(result.d(Node(resultNN)) != 0):
-        print "this is bad"
-        print result.data, resultNN
+        print "This is bad"
+        print result.data, "!=", resultNN
+    else:
+        print "This is good"
+        print "Cover tree query is", n_t/ct_t, "faster"
 
-    plot(X[0], X[1], 'rx')
+    plot(pts[0], pts[1], 'rx')
     plot([query[0]], [query[1]], 'go')
     plot([resultNN[0]], [resultNN[1]], 'y^')
     plot([result.data[0]], [result.data[1]], 'mo')
     
 
-    #printDotty prints the tree that was generated
-    # in dotty format, for more info on the format, see
-    # http://graphviz.org/
+    # printDotty prints the tree that was generated in dotty format,
+    # for more info on the format, see http://graphviz.org/
     # ct.printDotty()
-    
+
     # show()
 
 

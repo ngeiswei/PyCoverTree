@@ -31,11 +31,12 @@ class CoverTree:
     #  should be the minimum distance between Nodes.
     #Output:
     #
-    def __init__(self, distance, initpt, maxlevel, minlevel = -10):
+    def __init__(self, distance, initpt, maxlevel, minlevel = -10, base = 2):
         self.distance = distance
         self.root = initpt
         self.maxlevel = maxlevel
         self.minlevel = minlevel
+        self.base = base
 
 
     #
@@ -84,17 +85,17 @@ class CoverTree:
             print "already an element", p
             return True
 
-        if(d_p_Q > 2**i):
+        if(d_p_Q > self.base**i):
             return True
         else:
             #construct Q_i-1
-            Qi_next = [q for q in Q if self.distance(p.data, q.data) <= 2**i]
+            Qi_next = [q for q in Q if self.distance(p.data, q.data) <= self.base**i]
             d_p_Qi,_ = self.getDist(p, Qi)
             
             myIns = self.insert_rec(p, Qi_next, i-1)
-            if(myIns and d_p_Qi <= 2**i):
+            if(myIns and d_p_Qi <= self.base**i):
                 possParents = [q for q in Qi
-                               if self.distance(p.data, q.data) <= 2**i]
+                               if self.distance(p.data, q.data) <= self.base**i]
                 choice(possParents).addChild(p, i)
                 return False
             else:
@@ -116,7 +117,7 @@ class CoverTree:
 
             #create the next set
             Qcurr = [q for q in Q
-                     if self.distance(p.data, q.data) <= d_p_Q + 2**l]
+                     if self.distance(p.data, q.data) <= d_p_Q + self.base**l]
 
         #find the minimum
         return self.arg_min(p, Qcurr)
@@ -130,7 +131,7 @@ class CoverTree:
     def find_rec(self, p, Qi, i):
         #get the children of the current level
         Q, _ = self.getChildren(p, Qi, i)
-        Qi_next = [q for q in Q if self.distance(p.data, q.data) <= 2**i]
+        Qi_next = [q for q in Q if self.distance(p.data, q.data) <= self.base**i]
         d_p_Qi, elt = self.getDist(p, Qi)
 
         if(i < self.minlevel):

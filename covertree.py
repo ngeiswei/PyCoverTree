@@ -1,4 +1,4 @@
-#File: cover_tree_core.py
+#File: covertree.py
 #Author: Thomas Kollar
 #email: tkollar@csail.mit.edu
 #Date: 05/04/07
@@ -21,7 +21,7 @@ from copy import *
 from random import *
 import sys
 
-class cover_tree_core:
+class CoverTree:
 
     #
     #Overview: initalization method

@@ -54,19 +54,17 @@ def test_covertree():
     #cover-tree nearest neighbor
     t = gt()
     result = ct.nearest_neighbor(Node(query))
-    print "result =", result
+    # print "result =", result
     ct_t = gt() - t
     print "Time to run a cover tree NN query:", ct_t, "seconds"
     
     #standard nearest neighbor
     t = gt()
     resultNN = NN(query, pts, distance)
-    print "resultNN =", resultNN
+    # print "resultNN =", resultNN
     n_t = gt() - t
     print "Time to run a naive NN query:", n_t, "seconds"
 
-    print "result =", result
-    print "resultNN =", resultNN
     if(distance(result.data, resultNN) != 0):
         print "This is bad"
         print result.data, "!=", resultNN

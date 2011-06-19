@@ -16,9 +16,8 @@
 #  If you use this code in your research, kindly refer to the 
 #  technical report.
 
-from scipy import *
-from copy import *
-from random import *
+from copy import deepcopy
+from random import choice
 import sys
 
 class CoverTree:
@@ -38,7 +37,7 @@ class CoverTree:
         self.maxlevel = maxlevel
         self.minlevel = minlevel
 
-            
+
     #
     #Overview: insert an element p into the tree
     #
@@ -56,7 +55,7 @@ class CoverTree:
     #          defined in Node
     #
     def nearest_neighbor(self, p):
-        return self.nearest_neighbor_iter(self.root, p)
+        return self.nearest_neighbor_iter(p)
 
     #
     #Overview: find an element in the tree
@@ -74,10 +73,11 @@ class CoverTree:
     #             based on the current level, recursive
     #
     #Input: Node p, Cover Qi(list of nodes?), integer level i
-    #Output: boolean, Whether the node was inserted or not
+    #Output: boolean, True if the node is not inserted, False otherwise
     #
     def insert_rec(self, p, Qi, i):
-        #get the children of the current level
+        # get the children of the current level
+        # and the distance o the nearest child
         Q, d_p_Q = self.getChildren(p, Qi, i)
 
         if(d_p_Q == 0.0):
@@ -88,22 +88,14 @@ class CoverTree:
             return True
         else:
             #construct Q_i-1
-            Qi_next = []
-            for q in Q:
-                if(self.distance(p.data, q.data) <= 2**i): #and q not in Qi_next):
-                    Qi_next.append(q)
-            d_p_Qi,elt = self.getDist(p, Qi)
+            Qi_next = [q for q in Q if self.distance(p.data, q.data) <= 2**i]
+            d_p_Qi,_ = self.getDist(p, Qi)
             
             myIns = self.insert_rec(p, Qi_next, i-1)
-            if(myIns and  d_p_Qi <= 2**i):
-                possParents = []
-                for q in Qi:
-                    if(self.distance(p.data, q.data) <= 2**i):
-                        possParents.append(q)
-                        
-                myInst = randint(0, len(possParents)-1)
-                possParents[myInst].addChild(p, i)
-
+            if(myIns and d_p_Qi <= 2**i):
+                possParents = [q for q in Qi
+                               if self.distance(p.data, q.data) <= 2**i]
+                choice(possParents).addChild(p, i)
                 return False
             else:
                 return myIns
@@ -111,36 +103,20 @@ class CoverTree:
     #
     #Overview:get the nearest neighbor, iterative
     #
-    #Input: root node T, query Node p
+    #Input: query Node p
     #Output: the nearest Node 
     #
-    def nearest_neighbor_iter(self, T, p):
+    def nearest_neighbor_iter(self, p):
         Qcurr = [self.root]
-        done = False
-
-        level = self.maxlevel
-        Q = []
-        while(not done):
+        for l in reversed(xrange(self.minlevel, self.maxlevel + 1)):
 
             #get the children of the current Q and
             #the best distance at the same time
-            Q, d_p_Q = self.getChildren(p, Qcurr, level)
+            Q, d_p_Q = self.getChildren(p, Qcurr, l)
 
-            #if there are no children to examine, then
-            #we are done and we return
-            if(level<=self.minlevel):
-                done = True
-            
             #create the next set
-            Qnext = []
-            for q in Q:
-                if(self.distance(p.data, q.data) <= d_p_Q + 2**level):
-                    Qnext.append(q)
-            Qcurr = Qnext
-
-            #go to the next level
-            level = level -1;
-
+            Qcurr = [q for q in Q
+                     if self.distance(p.data, q.data) <= d_p_Q + 2**l]
 
         #find the minimum
         return self.arg_min(p, Qcurr)
@@ -153,18 +129,15 @@ class CoverTree:
     #
     def find_rec(self, p, Qi, i):
         #get the children of the current level
-        Q, d_p_Q = self.getChildren(p, Qi, i)
-        Qi_next = []
-        for q in Q:
-            if(p.d(q) <= 2**i): #and q not in Qi_next):
-                Qi_next.append(q)
-        d_p_Qi,elt = self.getDist(p, Qi)
+        Q, _ = self.getChildren(p, Qi, i)
+        Qi_next = [q for q in Q if self.distance(p.data, q.data) <= 2**i]
+        d_p_Qi, elt = self.getDist(p, Qi)
 
         if(i < self.minlevel):
             print "Elt. not found"
             return None
         elif(d_p_Qi == 0):
-            return [elt, i]
+            return elt, i
         else:
             return self.find_rec(p, Qi_next, i-1)
 
@@ -176,37 +149,26 @@ class CoverTree:
     #Output: the children of Node p
     #
     def getChildren(self, p, Qi, level):
-        Q = []
-        
-        #get all the children
-        d_p_Q = sys.maxint
-        
-        for j in Qi:
-            Q.extend(j.getChildren(level))
-            
-            #find the minimum distance
-            for q in j.getChildren(level):
-                if(self.distance(p.data, q.data) <= d_p_Q):
-                    d_p_Q = self.distance(p.data, q.data)
-
+        Q = sum([j.getChildren(level) for j in Qi], [])
+        d_p_Q = min([self.distance(p.data, q.data) for q in Q])
         return Q, d_p_Q
 
     #
-    #Overview:get the distances at the current level
+    #Overview:get the distance at the current level
     #
     #Input: Node p to get the distances from, Cover set Qi, list of Nodes to exclude
     #Output: the distances to all nodes below and the cover set
     #
-    def getDist(self, p, Qi, excludeList=[]):
+    def getDist(self, p, Qi):
+        # TODO perhaps can be sped-up by splitting defining another function that returns only the distance and use min instead of that loop
         #get all the children
-        d_p_Q = sys.maxint
+        d_p_Q = sys.float_info.max
         retQ = None
         for q in Qi:
-
-            if(self.distance(p.data, q.data) <= d_p_Q and not q.data in excludeList):
-                d_p_Q = self.distance(p.data, q.data)
+            d = self.distance(p.data, q.data)
+            if(d <= d_p_Q):
+                d_p_Q = d
                 retQ = q 
-
         return [d_p_Q,retQ]
 
     #
@@ -216,14 +178,7 @@ class CoverTree:
     #Output: minimum distance Node in Q to p
     #
     def arg_min(self, p, Q):
-        if(len(Q)>0):
-            min_q = Q[0]
-            
-        for q in Q:
-            if(self.distance(p.data, q.data) <= self.distance(p.data, min_q.data)):
-                min_q = q
-
-        return min_q 
+        return min(Q, key = lambda q: self.distance(p.data, q.data))
 
     #
     #Overview:print to the terminal the dot representation
@@ -232,7 +187,6 @@ class CoverTree:
     #Input: None
     #Output: Dotty representation of the cover tree printed to the screen
     #
-
     def printDotty(self):
         print "digraph {"
         self.printHash = {}
@@ -246,7 +200,7 @@ class CoverTree:
     #
     #Overview:recursively print the tree (helper function for printDotty)
     #
-    #Input: None
+    #Input: T ???
     #Output: Dotty representation of the cover tree printed to the screen
     #
     def printTree(self, T, level):
@@ -275,17 +229,17 @@ class Node:
     #data is an array of values
     def __init__(self, data=None):
         self.data = data
-        self.children = {}
+        self.children = {}      # dict mapping level and children
         self.parent = None
 
     #addChild adds a child to a particular Node and a given level
     def addChild(self, child, level):
         try:
-            if(not child in self.children[level]):
+            # in case level is not in self.children yet
+            if(child not in self.children[level]):
                 self.children[level].append(child)
         except(KeyError):
             self.children[level] = [child]
-
         child.parent = self
 
     #getChildren gets the children of a Node at a particular level
@@ -299,14 +253,10 @@ class Node:
         return retLst
 
     def removeConnections(self, level):
-        if(not self.parent == None):
+        if(self.parent != None):
             #print self.parent.children
             self.parent.children[level+1].remove(self)
             self.parent = None
-
-    #returns the array representation of the Node
-    def toarray(self):
-        return self.data
 
     def __str__(self):
         return str(self.data)

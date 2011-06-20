@@ -1,22 +1,18 @@
 #!/usr/bin/env python
 #
-#File: test_covertree.py
-#Author: Thomas Kollar
-#email: tkollar@csail.mit.edu
-#Date: 11/20/08
-#All Rights Reserved. Copyright Thomas Kollar 2007
+# File: test_covertree.py
+# Date of creation: 11/20/08
+# Copyright (c) 2007, Thomas Kollar <tkollar@csail.mit.edu>
+# Copyright (c) 2011, Nil Geisweiller <ngeiswei@gmail.com>
+# All rights reserved.
 #
-#
-#
-#  This is a tester for the cover tree nearest
-#  neighbor algorithm.  For more information
-#  please refer to the technical report entitled
-#  "Fast Nearest Neighbors" by Thomas Kollar
-#  or to "Cover Trees for Nearest Neighbor" by
-#  John Langford, Sham Kakade and Alina Beygelzimer
+# This is a tester for the cover tree nearest neighbor algorithm.  For
+# more information please refer to the technical report entitled "Fast
+# Nearest Neighbors" by Thomas Kollar or to "Cover Trees for Nearest
+# Neighbor" by John Langford, Sham Kakade and Alina Beygelzimer
 #  
-#  If you use this code in your research, kindly refer to the 
-#  technical report.
+# If you use this code in your research, kindly refer to the technical
+# report.
 
 from covertree import CoverTree, Node
 from naiveNN import NN

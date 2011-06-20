@@ -1,20 +1,16 @@
-#File: covertree.py
-#Author: Thomas Kollar
-#email: tkollar@csail.mit.edu
-#Date: 05/04/07
-#All Rights Reserved. Copyright Thomas Kollar 2007
+# File: covertree.py
+# Date of creation: 05/04/07
+# Copyright (c) 2007, Thomas Kollar <tkollar@csail.mit.edu>
+# Copyright (c) 2011, Nil Geisweiller <ngeiswei@gmail.com>
+# All rights reserved.
 #
-#
-#
-#  This is a class for the cover tree nearest
-#  neighbor algorithm.  For more information
-#  please refer to the technical report entitled
-#  "Fast Nearest Neighbors" by Thomas Kollar
-#  or to "Cover Trees for Nearest Neighbor" by
-#  John Langford, Sham Kakade and Alina Beygelzimer
+# This is a class for the cover tree nearest neighbor algorithm.  For
+# more information please refer to the technical report entitled "Fast
+# Nearest Neighbors" by Thomas Kollar or to "Cover Trees for Nearest
+# Neighbor" by John Langford, Sham Kakade and Alina Beygelzimer
 #  
-#  If you use this code in your research, kindly refer to the 
-#  technical report.
+# If you use this code in your research, kindly refer to the technical
+# report.
 
 from copy import deepcopy
 from random import choice
@@ -264,4 +260,4 @@ class Node:
     
     def __repr__(self):
         return str(self.data)
-    
+

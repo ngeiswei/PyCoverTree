@@ -133,7 +133,7 @@ class CoverTree:
         else:
             #construct Q_i-1
             Qi_next = [q for q in Q if self.distance(p, q.data) <= self.base**i]
-            d_p_Qi,_ = self.getDist(p, Qi)
+            d_p_Qi = self.getDist(p, Qi)
             
             myIns = self.insert_rec(p, Qi_next, i-1)
             if(not myIns and d_p_Qi <= self.base**i):
@@ -168,8 +168,8 @@ class CoverTree:
     #
     #Overview:find an element given a particular level, recursive
     #
-    #Input: Node to find p, Cover set Qi, current integer level i
-    #Output: the Node node and the level
+    #Input: point p to find, cover set Qi, current level i
+    #Output: True if found False otherwise and the level where it is
     #
     # TODO: it's strange to return the Node found, perhaps it should
     # return a boolean and the level
@@ -177,13 +177,14 @@ class CoverTree:
         #get the children of the current level
         Q, _ = self.getChildren(p, Qi, i)
         Qi_next = [q for q in Q if self.distance(p, q.data) <= self.base**i]
-        d_p_Qi, elt = self.getDist(p, Qi)
+        d_p_Qi = self.getDist(p, Qi)
 
+        # TODO can be simplified 
         if(i < self.minlevel):
-            print "Elt. not found"
-            return None
+            print "Point not found"
+            return False, None
         elif(d_p_Qi == 0):
-            return elt, i
+            return True, i
         else:
             return self.find_rec(p, Qi_next, i-1)
 
@@ -200,22 +201,17 @@ class CoverTree:
         return Q, d_p_Q
 
     #
-    #Overview:get the distance at the current level
+    # Overview: get the lowest distance of q and any Node of Qi
     #
-    #Input: point p to get the distances from, Cover set Qi, list of Nodes to exclude
-    #Output: the distances to all nodes below and the cover set
+    # Input: point p to get the distances from, Cover set Qi
+    #
+    # Output: the lowest distance of q and any Node of Qi
     #
     def getDist(self, p, Qi):
         # TODO perhaps can be sped-up by splitting defining another function that returns only the distance and use min instead of that loop
         #get all the children
-        d_p_Q = sys.float_info.max
-        retQ = None
-        for q in Qi:
-            d = self.distance(p, q.data)
-            if(d <= d_p_Q):
-                d_p_Q = d
-                retQ = q 
-        return [d_p_Q,retQ]
+        return min([self.distance(p, q.data) for q in Qi])
+
 
     #
     #Overview:get the argument that has the minimum distance

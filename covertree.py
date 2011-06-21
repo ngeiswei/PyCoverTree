@@ -176,7 +176,7 @@ class CoverTree:
     def find_rec(self, p, Qi, i):
         #get the children of the current level
         Q, _ = self.getChildren(p, Qi, i)
-        Qi_next = [q for q in Q if self.distance(p.data, q.data) <= self.base**i]
+        Qi_next = [q for q in Q if self.distance(p, q.data) <= self.base**i]
         d_p_Qi, elt = self.getDist(p, Qi)
 
         if(i < self.minlevel):

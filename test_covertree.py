@@ -14,7 +14,7 @@
 # If you use this code in your research, kindly refer to the technical
 # report.
 
-from covertree import CoverTree, Node
+from covertree import CoverTree
 from naiveNN import NN
 from pylab import sqrt, dot, plot, show
 from numpy import subtract
@@ -40,16 +40,16 @@ def test_covertree():
     gt = time.time
     
     t = gt()
-    ct = CoverTree(distance, Node(pts[0]), 10)
-    for i in xrange(1, len(pts)):
-        ct.insert(Node(pts[i]))
+    ct = CoverTree(distance)
+    for p in pts:
+        ct.insert(p)
     b_t = gt() - t
     print "Time to build a cover tree of", n_points, "2D points:", b_t, "seconds"
 
     query = (0.5,0.5)
     #cover-tree nearest neighbor
     t = gt()
-    result = ct.nearest_neighbor(Node(query))
+    result = ct.nearest_neighbor(query)
     # print "result =", result
     ct_t = gt() - t
     print "Time to run a cover tree NN query:", ct_t, "seconds"
@@ -61,7 +61,7 @@ def test_covertree():
     n_t = gt() - t
     print "Time to run a naive NN query:", n_t, "seconds"
 
-    if(distance(result.data, resultNN) != 0):
+    if(distance(result, resultNN) != 0):
         print "This is bad"
         print result.data, "!=", resultNN
     else:
@@ -71,7 +71,7 @@ def test_covertree():
     plot(pts[0], pts[1], 'rx')
     plot([query[0]], [query[1]], 'go')
     plot([resultNN[0]], [resultNN[1]], 'y^')
-    plot([result.data[0]], [result.data[1]], 'mo')
+    plot([result[0]], [result[1]], 'mo')
     
 
     # printDotty prints the tree that was generated in dotty format,

@@ -122,8 +122,11 @@ class CoverTree:
         # print "p =", p
         # get the children of the current level
         # and the distance o the nearest child
-        Q, d_p_Q = self.getChildren(p, Qi, i)
-
+        # TODO distances of Qi is computed as well and is redundant with (3) and (4)
+        Q, Q_p_ds = self.getChildren(p, Qi, i)
+        
+        d_p_Q = min(Q_p_ds)
+        
         if(d_p_Q == 0.0):
             print "already an element", p
             return True
@@ -132,11 +135,13 @@ class CoverTree:
             return False
         else:
             #construct Q_i-1
-            Qi_next = [q for q in Q if self.distance(p, q.data) <= self.base**i]
+            Qi_next = [q for q, d in zip(Q, Q_p_ds) if d <= self.base**i]
+            # TODO (3)
             d_p_Qi = self.getDist(p, Qi)
             
             myIns = self.insert_rec(p, Qi_next, i-1)
             if(not myIns and d_p_Qi <= self.base**i):
+                # TODO (4)
                 possParents = [q for q in Qi
                                if self.distance(p, q.data) <= self.base**i]
                 choice(possParents).addChild(self.Node(p), i)
@@ -156,27 +161,27 @@ class CoverTree:
 
             #get the children of the current Q and
             #the best distance at the same time
-            Q, d_p_Q = self.getChildren(p, Qcurr, l)
+            Q, Q_p_ds = self.getChildren(p, Qcurr, l)
+
+            d_p_Q = min(Q_p_ds)
 
             #create the next set
-            Qcurr = [q for q in Q
-                     if self.distance(p, q.data) <= d_p_Q + self.base**l]
+            Qcurr = [q for q, d in zip(Q, Q_p_ds) if d <= d_p_Q + self.base**l]
 
         #find the minimum
         return self.arg_min(p, Qcurr)
 
     #
-    #Overview:find an element given a particular level, recursive
+    # Overview: find an element given a particular level, recursive
     #
-    #Input: point p to find, cover set Qi, current level i
-    #Output: True if found False otherwise and the level where it is
+    # Input: point p to find, cover set Qi, current level i
     #
-    # TODO: it's strange to return the Node found, perhaps it should
-    # return a boolean and the level
+    # Output: True if p is found False otherwise and the level of p
+    #
     def find_rec(self, p, Qi, i):
         #get the children of the current level
-        Q, _ = self.getChildren(p, Qi, i)
-        Qi_next = [q for q in Q if self.distance(p, q.data) <= self.base**i]
+        Q, Q_p_ds = self.getChildren(p, Qi, i)
+        Qi_next = [q for q, d in zip(Q, Q_p_ds) if d <= self.base**i]
         d_p_Qi = self.getDist(p, Qi)
 
         # TODO can be simplified 
@@ -190,15 +195,16 @@ class CoverTree:
 
 
     #
-    #Overview:get the children of the current level
+    # Overview: get the children of cover set Qi at level i
     #
-    #Input: Node p to get the children of, Cover set Qi, current integer level i
-    #Output: the children of Node p
+    # Input: point p to compare the distance with Qi
     #
-    def getChildren(self, p, Qi, level):
-        Q = sum([j.getChildren(level) for j in Qi], [])
-        d_p_Q = min([self.distance(p, q.data) for q in Q])
-        return Q, d_p_Q
+    # Output: the children of Qi and the distances of them with point p
+    #
+    def getChildren(self, p, Qi, i):
+        Q = sum([j.getChildren(i) for j in Qi], [])
+        Q_p_ds = [self.distance(p, q.data) for q in Q]
+        return Q, Q_p_ds
 
     #
     # Overview: get the lowest distance of q and any Node of Qi
@@ -208,8 +214,6 @@ class CoverTree:
     # Output: the lowest distance of q and any Node of Qi
     #
     def getDist(self, p, Qi):
-        # TODO perhaps can be sped-up by splitting defining another function that returns only the distance and use min instead of that loop
-        #get all the children
         return min([self.distance(p, q.data) for q in Qi])
 
 

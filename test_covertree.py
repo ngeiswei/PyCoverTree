@@ -23,6 +23,7 @@ from random import random, seed
 import time
 
 def distance(p, q):
+    # print "distance"
     # print "p =", p
     # print "q =", q
     x = subtract(p, q)
@@ -34,8 +35,6 @@ def test_covertree():
     n_points = 1000
     
     pts = [(random(), random()) for _ in xrange(n_points)]
-
-    # print X
 
     gt = time.time
     
@@ -67,6 +66,13 @@ def test_covertree():
     else:
         print "This is good"
         print "Cover tree query is", n_t/ct_t, "faster"
+
+
+    # test find
+    if ct.find(result):
+        print "This is good (covertree.find works)"
+    else:
+        print "This is bad (covertree.find doesn't work)"
 
     plot(pts[0], pts[1], 'rx')
     plot([query[0]], [query[1]], 'go')

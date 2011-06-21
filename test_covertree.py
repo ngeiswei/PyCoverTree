@@ -53,7 +53,7 @@ def test_covertree():
     ct_t = gt() - t
     print "Time to run a cover tree NN query:", ct_t, "seconds"
     
-    #standard nearest neighbor
+    # standard nearest neighbor
     t = gt()
     resultNN = NN(query, pts, distance)
     # print "resultNN =", resultNN
@@ -62,7 +62,7 @@ def test_covertree():
 
     if(distance(result, resultNN) != 0):
         print "This is bad"
-        print result.data, "!=", resultNN
+        print result, "!=", resultNN
     else:
         print "This is good"
         print "Cover tree query is", n_t/ct_t, "faster"

@@ -62,9 +62,9 @@ def test_covertree():
     n_t = gt() - t
     print "Time to run a naive NN query:", n_t, "seconds"
 
-    if distance(results[0], naive_results[0]) != 0:
+    if all([distance(r, nr) != 0 for r, nr in zip(results, naive_results)]):
         print "This is bad"
-        print results[0], "!=", naive_results[0]
+        print results, "!=", naive_results
     else:
         print "This is good"
         print "Cover tree query is", n_t/ct_t, "faster"

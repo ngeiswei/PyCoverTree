@@ -14,6 +14,7 @@
 
 from copy import deepcopy
 from random import choice
+from heapq import nsmallest 
 import sys
 
 class CoverTree:
@@ -85,6 +86,8 @@ class CoverTree:
         self.maxlevel = maxlevel
         self.minlevel = minlevel
         self.base = base
+        # for printDotty
+        self.printHash = {}
 
 
     #
@@ -102,15 +105,15 @@ class CoverTree:
                                    self.maxlevel)
 
     #
-    # Overview: get the nearest neighbor of an element
+    # Overview: get the k-nearest neighbors of an element
     #
     # Input: point p
     #
-    # Output: Nearest point with respect to the distance metric
+    # Output: Nearest points with respect to the distance metric
     #          self.distance()
     #
-    def nearest_neighbor(self, p):
-        return self.nearest_neighbor_iter(p).data
+    def knn(self, p, k):
+        return self.knn_iter(p, k)
 
     #
     # Overview: find an element in the tree
@@ -165,15 +168,20 @@ class CoverTree:
     #Input: query point p
     #Output: the nearest Node 
     #
-    def nearest_neighbor_iter(self, p):
+    def knn_iter(self, p, k):
         Qi = [self.root]
         Qi_p_ds = [self.distance(p, self.root.data)]
         for i in reversed(xrange(self.minlevel, self.maxlevel + 1)):
 
+
+            # print "Qi =", Qi
+            
             #get the children of the current Q and
             #the best distance at the same time
             Q, Q_p_ds = self.getChildrenDist(p, Qi, Qi_p_ds, i)
 
+            # print "Q =", Q
+            
             d_p_Q = min(Q_p_ds)
 
             #create the next set
@@ -183,7 +191,7 @@ class CoverTree:
             Qi_p_ds = [d for _, d in zn]
 
         #find the minimum
-        return self.arg_min(Qi, Qi_p_ds)
+        return self.args_min(Qi, Qi_p_ds, k)
 
     #
     # Overview: find an element given a particular level, recursive
@@ -229,10 +237,11 @@ class CoverTree:
     # Overview:get the argument that has the minimum distance
     #
     # Input: Input cover set Q, distances of all nodes of Q to some point
-    # Output: minimum distance Node in Q to that point
+    # Output: minimum distance points in Q to that point
     #
-    def arg_min(self, Q, Q_p_ds):
-        return min(zip(Q, Q_p_ds), key = lambda x: x[1])[0]
+    def args_min(self, Q, Q_p_ds, k):
+        z = nsmallest(k, zip(Q, Q_p_ds), lambda x: x[1])
+        return [q.data for q, _ in z]
 
     #
     #Overview:print to the terminal the dot representation
@@ -266,10 +275,11 @@ class CoverTree:
             childs = deepcopy(p.getChildren(level))
 
             for i in p.getChildren(level):
-                if(level < 0):
-                    mylev = "_" + str(abs(level))
-                else:
-                    mylev = str(level)
+                # This piece of code is not used
+                # if(level < 0):
+                #     mylev = "_" + str(abs(level))
+                # else:
+                #     mylev = str(level)
 
                 self.printHash["\"lev:" +str(level) + " " + str(p.data) + "\"->\"lev:" + str(level-1) + " " + str(i.data) + "\""] = 0
 

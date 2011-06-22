@@ -15,7 +15,7 @@
 # report.
 
 from covertree import CoverTree
-from naiveNN import NN
+from naiveknn import knn
 from pylab import sqrt, dot, plot, show
 from numpy import subtract
 # from scipy import random
@@ -33,6 +33,8 @@ def test_covertree():
     seed(1)
 
     n_points = 1000
+
+    k = 1
     
     pts = [(random(), random()) for _ in xrange(n_points)]
 
@@ -48,36 +50,36 @@ def test_covertree():
     query = (0.5,0.5)
     #cover-tree nearest neighbor
     t = gt()
-    result = ct.nearest_neighbor(query)
+    results = ct.knn(query, k)
     # print "result =", result
     ct_t = gt() - t
     print "Time to run a cover tree NN query:", ct_t, "seconds"
     
     # standard nearest neighbor
     t = gt()
-    resultNN = NN(query, pts, distance)
+    naive_results = knn(query, pts, distance, k)
     # print "resultNN =", resultNN
     n_t = gt() - t
     print "Time to run a naive NN query:", n_t, "seconds"
 
-    if(distance(result, resultNN) != 0):
+    if distance(results[0], naive_results[0]) != 0:
         print "This is bad"
-        print result, "!=", resultNN
+        print results[0], "!=", naive_results[0]
     else:
         print "This is good"
         print "Cover tree query is", n_t/ct_t, "faster"
 
 
     # test find
-    if ct.find(result):
+    if ct.find(results[0]):
         print "This is good (covertree.find works)"
     else:
         print "This is bad (covertree.find doesn't work)"
 
     plot(pts[0], pts[1], 'rx')
     plot([query[0]], [query[1]], 'go')
-    plot([resultNN[0]], [resultNN[1]], 'y^')
-    plot([result[0]], [result[1]], 'mo')
+    plot([naive_results[0][0]], [naive_results[0][1]], 'y^')
+    plot([results[0][0]], [results[0][1]], 'mo')
     
 
     # printDotty prints the tree that was generated in dotty format,

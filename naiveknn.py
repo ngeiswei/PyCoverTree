@@ -1,4 +1,4 @@
-# File: naiveNN.py
+# File: naiveknn.py
 # Author: Nil Geisweiller
 # email: ngeiswei@gmail.com
 # Date: 
@@ -8,12 +8,12 @@
 
 from heapq import nsmallest 
 
-def kNN(pt, pts, dist_f, k = 1):
+def knn(pt, pts, dist_f, k = 1):
     '''Return the k-nearest points in pts to pt using a naive
     algorithm. dist_f is a function that computes the distance between
     2 points'''
-    return nsmallest(k, pts, lambda x: dist_f(pt, x))
+    return nsmallest(k, pts, lambda x: dist_f(x, pt))
 
-def NN(pt, pts, dist_f):
-    '''Like kNN but return the nearest point in pts'''
-    return kNN(pt, pts, dist_f)[0]
+def nn(pt, pts, dist_f):
+    '''Like knn but return the nearest point in pts'''
+    return knn(pt, pts, dist_f)[0]

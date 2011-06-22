@@ -16,11 +16,11 @@
 
 from covertree import CoverTree
 from naiveknn import knn
-from pylab import sqrt, dot, plot, show
+from pylab import sqrt, dot, plot#, show
 from numpy import subtract
-# from scipy import random
 from random import random, seed
 import time
+import cPickle as pickle
 
 def distance(p, q):
     # print "distance"
@@ -49,6 +49,24 @@ def test_covertree():
     b_t = gt() - t
     print "Building time:", b_t, "seconds"
 
+    print "==== Test saving/loading (via pickle)"
+    ctFileName = "test.ct"
+    print "Save cover tree under", ctFileName
+    t = gt()
+    ct_file = open("test.ct", "w")
+    pickle.dump(ct, ct_file)
+    ct_file.close()
+    print "Saving time:", gt() - t
+    del ct_file
+    del ct
+    # load ct
+    print "Reload", ctFileName
+    t = gt()
+    ct_file = open("test.ct")
+    ct = pickle.load(ct_file)
+    ct_file.close()
+    print "Loading time:", gt() - t
+    
     print "==== Test " + str(k) + "-nearest neighbors cover tree query ===="
     query = (0.5,0.5)
 

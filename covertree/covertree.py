@@ -17,58 +17,57 @@ from random import choice
 from heapq import nsmallest 
 import sys
 
-class CoverTree:
+# the Node representation of the data
+class Node:
+    # data is an array of values
+    def __init__(self, data=None):
+        self.data = data
+        self.children = {}      # dict mapping level and children
+        self.parent = None
 
-    # the Node representation of the data
-    class Node:
-        # data is an array of values
-        def __init__(self, data=None):
-            self.data = data
-            self.children = {}      # dict mapping level and children
-            self.parent = None
-    
-        # addChild adds a child to a particular Node and a given level
-        def addChild(self, child, level):
-            try:
-                # in case level is not in self.children yet
-                if(child not in self.children[level]):
-                    self.children[level].append(child)
-            except(KeyError):
-                self.children[level] = [child]
-            child.parent = self
-    
-        # getChildren gets the children of a Node at a particular level
-        def getChildren(self, level):
-            retLst = [self]
-            try:
-                retLst.extend(self.children[level])
-            except(KeyError):
-                pass
-            
-            return retLst
-    
-        # like getChildren but does not return the parent
-        def getOnlyChildren(self, level):
-            try:
-                return self.children[level]
-            except(KeyError):
-                pass
-            
-            return []
+    # addChild adds a child to a particular Node and a given level
+    def addChild(self, child, level):
+        try:
+            # in case level is not in self.children yet
+            if(child not in self.children[level]):
+                self.children[level].append(child)
+        except(KeyError):
+            self.children[level] = [child]
+        child.parent = self
 
-
-        def removeConnections(self, level):
-            if(self.parent != None):
-                #print self.parent.children
-                self.parent.children[level+1].remove(self)
-                self.parent = None
-    
-        def __str__(self):
-            return str(self.data)
+    # getChildren gets the children of a Node at a particular level
+    def getChildren(self, level):
+        retLst = [self]
+        try:
+            retLst.extend(self.children[level])
+        except(KeyError):
+            pass
         
-        def __repr__(self):
-            return str(self.data)
+        return retLst
 
+    # like getChildren but does not return the parent
+    def getOnlyChildren(self, level):
+        try:
+            return self.children[level]
+        except(KeyError):
+            pass
+        
+        return []
+
+
+    def removeConnections(self, level):
+        if(self.parent != None):
+            #print self.parent.children
+            self.parent.children[level+1].remove(self)
+            self.parent = None
+
+    def __str__(self):
+        return str(self.data)
+    
+    def __repr__(self):
+        return str(self.data)
+
+class CoverTree:
     
     #
     # Overview: initalization method
@@ -98,7 +97,7 @@ class CoverTree:
     #
     def insert(self, p):
         if self.root == None:
-            self.root = self.Node(p)
+            self.root = Node(p)
         else:
             return self.insert_rec(p, [self.root],
                                    [self.distance(p, self.root.data)],
@@ -157,7 +156,7 @@ class CoverTree:
             if not myIns and min(Qi_p_ds) <= self.base**i:
                 possParents = [q for q, d in zip(Qi, Qi_p_ds)
                                if d <= self.base**i]
-                choice(possParents).addChild(self.Node(p), i)
+                choice(possParents).addChild(Node(p), i)
                 return True
             else:
                 return myIns

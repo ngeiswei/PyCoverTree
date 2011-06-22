@@ -34,47 +34,57 @@ def test_covertree():
 
     n_points = 1000
 
-    k = 1
+    k = 5
     
     pts = [(random(), random()) for _ in xrange(n_points)]
 
     gt = time.time
+
+    print "Build cover tree of", n_points, "2D-points"
     
     t = gt()
     ct = CoverTree(distance)
     for p in pts:
         ct.insert(p)
     b_t = gt() - t
-    print "Time to build a cover tree of", n_points, "2D points:", b_t, "seconds"
+    print "Building time:", b_t, "seconds"
 
+    print "==== Test " + str(k) + "-nearest neighbors cover tree query ===="
     query = (0.5,0.5)
+
+    # naive nearest neighbor
+    t = gt()
+    naive_results = knn(query, pts, distance, k)
+    # print "resultNN =", resultNN
+    n_t = gt() - t
+    print "Time to run a naive " + str(k) + "-nn query:", n_t, "seconds"
+
     #cover-tree nearest neighbor
     t = gt()
     results = ct.knn(query, k)
     # print "result =", result
     ct_t = gt() - t
-    print "Time to run a cover tree NN query:", ct_t, "seconds"
+    print "Time to run a cover tree " + str(k) + "-nn query:", ct_t, "seconds"
     
-    # standard nearest neighbor
-    t = gt()
-    naive_results = knn(query, pts, distance, k)
-    # print "resultNN =", resultNN
-    n_t = gt() - t
-    print "Time to run a naive NN query:", n_t, "seconds"
-
     if all([distance(r, nr) != 0 for r, nr in zip(results, naive_results)]):
-        print "This is bad"
-        print results, "!=", naive_results
+        print "NOT OK!"
+        print results
+        print "!="
+        print naive_results
     else:
-        print "This is good"
+        print "OK!"
+        print results
+        print "=="
+        print naive_results
         print "Cover tree query is", n_t/ct_t, "faster"
 
 
     # test find
+    print "==== Test cover tree find method ===="
     if ct.find(results[0]):
-        print "This is good (covertree.find works)"
+        print "OK!"
     else:
-        print "This is bad (covertree.find doesn't work)"
+        print "NOT OK!"
 
     plot(pts[0], pts[1], 'rx')
     plot([query[0]], [query[1]], 'go')

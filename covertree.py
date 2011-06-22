@@ -171,18 +171,11 @@ class CoverTree:
     def knn_iter(self, p, k):
         Qi = [self.root]
         Qi_p_ds = [self.distance(p, self.root.data)]
-        for i in reversed(xrange(self.minlevel, self.maxlevel + 1)):
-
-
-            # print "Qi =", Qi
-            
+        for i in reversed(xrange(self.minlevel, self.maxlevel + 1)):            
             #get the children of the current Q and
             #the best distance at the same time
             Q, Q_p_ds = self.getChildrenDist(p, Qi, Qi_p_ds, i)
-
-            # print "Q =", Q
-            
-            d_p_Q = min(Q_p_ds)
+            d_p_Q = nsmallest(k, Q_p_ds)[-1]
 
             #create the next set
             zn = [(q, d) for q, d in zip(Q, Q_p_ds)

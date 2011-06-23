@@ -92,7 +92,7 @@ class CoverTree:
     # Overview: insert an element p into the tree
     #
     # Input: p
-    # Output: True if the node is inserted, False otherwise
+    # Output: nothing
     #
     def insert(self, p):
         if self.root == None:
@@ -101,12 +101,21 @@ class CoverTree:
             self.insert_iter(p)
 
             
-    # TODO add method which retrieve and then insert
+    #
+    # Overview: behaves like knn(p, k) and insert(p). This method exists for efficiency reason
+    #
+    # Input: point p, and k the number of nearest neighbors to return
+    #
+    # Output: Nearest points with respect to the distance metric
+    #          self.distance()
+    #
+    # def knn_insert(self, p, k):
+    #     return self.knn_insert_iter(p, k)
         
     #
     # Overview: get the k-nearest neighbors of an element
     #
-    # Input: point p
+    # Input: point p, and k the number of nearest neighbors to return
     #
     # Output: Nearest points with respect to the distance metric
     #          self.distance()
@@ -131,7 +140,7 @@ class CoverTree:
     #
     # Input: point p
     #
-    # Output: boolean, True if insertion is successful, False otherwise
+    # Output: nothing
     #
     def insert_iter(self, p):
         Qi_next = [self.root]
@@ -188,6 +197,48 @@ class CoverTree:
         #find the minimum
         return self.args_min(Qi, Qi_p_ds, k)
 
+
+    #
+    # Overview:insert an element p in to the cover tree
+    #
+    # Input: point p
+    #
+    # Output: nothing
+    #
+    # def knn_insert_iter(self, p, k):
+    #     Qi_next = [self.root]
+    #     Qi_next_p_ds = [self.distance(p, self.root.data)]
+    #     i = self.maxlevel
+    #     found_parent = False
+    #     while True:
+    #         Qi = Qi_next
+    #         Qi_p_ds = Qi_next_p_ds
+    #         # get the children of the current level
+    #         # and the distance of the all children
+    #         Q, Q_p_ds = self.getChildrenDist(p, Qi, Qi_p_ds, i)
+    #         d_k = nsmallest(k, Q_p_ds)
+    #         d_p_Q_h = d_k[-1]
+    #         d_p_Q_l = d_k[0]
+        
+    #         if d_p_Q_l == 0.0:    # already there no need to insert
+    #             return
+    #         elif d_p_Q_l > self.base**i: # we found the parent level
+    #             if not found_parent:
+    #                 found_parent = True
+    #                 pi = i + 1
+    #         else: # d_p_Q <= self.base**i
+    #             #construct Q_i-1
+    #             zn = [(q, d) for q, d in zip(Q, Q_p_ds) if d <= self.base**i]
+    #             Qi_next = [q for q, _ in zn]
+    #             Qi_next_p_ds = [d for _, d in zn]
+    #             i -= 1
+
+    #     self.minlevel = min(self.minlevel, pi) # update self.minlevel
+        
+    #     possParents = [q for q, d in zip(Qi, Qi_p_ds) if d <= self.base**pi]
+    #     choice(possParents).addChild(Node(p), pi)
+
+
     #
     # Overview: find an element given a particular level, recursive
     #
@@ -203,7 +254,6 @@ class CoverTree:
         Qi_next_p_ds = [d for _, d in zn]
         d_p_Qi = min(Qi_p_ds)
 
-        # TODO can be simplified
         if(i < self.minlevel):
             return False, None
         elif(d_p_Qi == 0):

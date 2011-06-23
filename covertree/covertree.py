@@ -109,8 +109,8 @@ class CoverTree:
     # Output: Nearest points with respect to the distance metric
     #          self.distance()
     #
-    # def knn_insert(self, p, k):
-    #     return self.knn_insert_iter(p, k)
+    def knn_insert(self, p, k):
+        return self.knn_insert_iter(p, k)
         
     #
     # Overview: get the k-nearest neighbors of an element
@@ -205,38 +205,39 @@ class CoverTree:
     #
     # Output: nothing
     #
-    # def knn_insert_iter(self, p, k):
-    #     Qi_next = [self.root]
-    #     Qi_next_p_ds = [self.distance(p, self.root.data)]
-    #     i = self.maxlevel
-    #     found_parent = False
-    #     while True:
-    #         Qi = Qi_next
-    #         Qi_p_ds = Qi_next_p_ds
-    #         # get the children of the current level
-    #         # and the distance of the all children
-    #         Q, Q_p_ds = self.getChildrenDist(p, Qi, Qi_p_ds, i)
-    #         d_k = nsmallest(k, Q_p_ds)
-    #         d_p_Q_h = d_k[-1]
-    #         d_p_Q_l = d_k[0]
+    def knn_insert_iter(self, p, k):
+        Qi_next = [self.root]
+        Qi_next_p_ds = [self.distance(p, self.root.data)]
+        i = self.maxlevel
+        found_parent = False
+        while not found_parent or i >= self.minlevel:
+            Qi = Qi_next
+            Qi_p_ds = Qi_next_p_ds
+            # get the children of the current level
+            # and the distance of the all children
+            Q, Q_p_ds = self.getChildrenDist(p, Qi, Qi_p_ds, i)
+            d_k = nsmallest(k, Q_p_ds)
+            d_p_Q_h = d_k[-1]
+            d_p_Q_l = d_k[0]
         
-    #         if d_p_Q_l == 0.0:    # already there no need to insert
-    #             return
-    #         elif d_p_Q_l > self.base**i: # we found the parent level
-    #             if not found_parent:
-    #                 found_parent = True
-    #                 pi = i + 1
-    #         else: # d_p_Q <= self.base**i
-    #             #construct Q_i-1
-    #             zn = [(q, d) for q, d in zip(Q, Q_p_ds) if d <= self.base**i]
-    #             Qi_next = [q for q, _ in zn]
-    #             Qi_next_p_ds = [d for _, d in zn]
-    #             i -= 1
+            if not found_parent and d_p_Q_l > self.base**i:
+                found_parent = True
+                pi = i + 1
+                parent = choice([q for q, d in zip(Qi, Qi_p_ds)
+                                 if d <= self.base**pi])
 
-    #     self.minlevel = min(self.minlevel, pi) # update self.minlevel
-        
-    #     possParents = [q for q, d in zip(Qi, Qi_p_ds) if d <= self.base**pi]
-    #     choice(possParents).addChild(Node(p), pi)
+            #construct Q_i-1
+            zn = [(q, d) for q, d in zip(Q, Q_p_ds)
+                  if d <= d_p_Q_h + self.base**i]
+            Qi_next = [q for q, _ in zn]
+            Qi_next_p_ds = [d for _, d in zn]
+            i -= 1
+
+        self.minlevel = min(self.minlevel, i + 1) # update self.minlevel
+        parent.addChild(Node(p), pi)
+
+        #find the minimum
+        return self.args_min(Qi_next, Qi_next_p_ds, k)
 
 
     #

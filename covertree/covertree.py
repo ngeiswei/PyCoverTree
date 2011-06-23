@@ -78,12 +78,11 @@ class CoverTree:
     #  base^(minlevel) should be the minimum distance between Nodes.
     # Output:
     #
-    def __init__(self, distance, root = None,
-                 maxlevel = 10, minlevel = -10, base = 2):
+    def __init__(self, distance, root = None, maxlevel = 10, base = 2):
         self.distance = distance
         self.root = root
         self.maxlevel = maxlevel
-        self.minlevel = minlevel
+        self.minlevel = maxlevel # the minlevel will adjust automatically
         self.base = base
         # for printDotty
         self.printHash = {}
@@ -99,10 +98,11 @@ class CoverTree:
         if self.root == None:
             self.root = Node(p)
         else:
-            return self.insert_rec(p, [self.root],
-                                   [self.distance(p, self.root.data)],
-                                   self.maxlevel)
+            self.insert_iter(p)
 
+            
+    # TODO add method which retrieve and then insert
+        
     #
     # Overview: get the k-nearest neighbors of an element
     #
@@ -127,50 +127,53 @@ class CoverTree:
 
 
     #
-    #Overview:insert an element p in to the cover tree
-    #             based on the current level, recursive
+    # Overview:insert an element p in to the cover tree
     #
-    #Input: point p, Cover Qi(list of nodes?), integer level i
-    #Output: boolean, True if insertion is successful, False otherwise
+    # Input: point p
     #
-    def insert_rec(self, p, Qi, Qi_p_ds, i):
-        # print "Qi =", Qi
-        # print "p =", p
-        # get the children of the current level
-        # and the distance of the all children
-        Q, Q_p_ds = self.getChildrenDist(p, Qi, Qi_p_ds, i)
-
-        d_p_Q = min(Q_p_ds) if Q_p_ds else sys.float_info.max
+    # Output: boolean, True if insertion is successful, False otherwise
+    #
+    def insert_iter(self, p):
+        Qi_next = [self.root]
+        Qi_next_p_ds = [self.distance(p, self.root.data)]
+        i = self.maxlevel
+        while True:
+            Qi = Qi_next
+            Qi_p_ds = Qi_next_p_ds
+            # get the children of the current level
+            # and the distance of the all children
+            Q, Q_p_ds = self.getChildrenDist(p, Qi, Qi_p_ds, i)
+            d_p_Q = min(Q_p_ds) if Q_p_ds else sys.float_info.max
         
-        if d_p_Q == 0.0:
-            print "already an element", p
-            return True
-        elif d_p_Q > self.base**i:
-            return False
-        else:
-            #construct Q_i-1
-            zn = [(q, d) for q, d in zip(Q, Q_p_ds) if d <= self.base**i]
-            Qi_next = [q for q, _ in zn]
-            Qi_next_p_ds = [d for _, d in zn]
-            myIns = self.insert_rec(p, Qi_next, Qi_next_p_ds, i-1)
-            if not myIns and min(Qi_p_ds) <= self.base**i:
-                possParents = [q for q, d in zip(Qi, Qi_p_ds)
-                               if d <= self.base**i]
-                choice(possParents).addChild(Node(p), i)
-                return True
-            else:
-                return myIns
-            
+            if d_p_Q == 0.0:    # already there no need to insert
+                return
+            elif d_p_Q > self.base**i: # we found the parent level
+                break
+            else: # d_p_Q <= self.base**i
+                #construct Q_i-1
+                zn = [(q, d) for q, d in zip(Q, Q_p_ds) if d <= self.base**i]
+                Qi_next = [q for q, _ in zn]
+                Qi_next_p_ds = [d for _, d in zn]
+                i -= 1
+
+        pi = i + 1              # parent level
+        self.minlevel = min(self.minlevel, pi) # update self.minlevel
+        
+        possParents = [q for q, d in zip(Qi, Qi_p_ds) if d <= self.base**pi]
+        choice(possParents).addChild(Node(p), pi)
+
+
     #
-    #Overview:get the nearest neighbor, iterative
+    # Overview:get the nearest neighbor, iterative
     #
-    #Input: query point p
-    #Output: the nearest Node 
+    # Input: query point p
+    #
+    # Output: the nearest Node 
     #
     def knn_iter(self, p, k):
         Qi = [self.root]
         Qi_p_ds = [self.distance(p, self.root.data)]
-        for i in reversed(xrange(self.minlevel, self.maxlevel + 1)):            
+        for i in reversed(xrange(self.minlevel, self.maxlevel + 1)):
             #get the children of the current Q and
             #the best distance at the same time
             Q, Q_p_ds = self.getChildrenDist(p, Qi, Qi_p_ds, i)
@@ -200,8 +203,8 @@ class CoverTree:
         Qi_next_p_ds = [d for _, d in zn]
         d_p_Qi = min(Qi_p_ds)
 
+        # TODO can be simplified
         if(i < self.minlevel):
-            print "Point not found"
             return False, None
         elif(d_p_Qi == 0):
             return True, i

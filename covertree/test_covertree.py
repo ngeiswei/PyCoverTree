@@ -16,11 +16,18 @@
 
 from covertree import CoverTree
 from naiveknn import knn
-# from pylab import sqrt, dot, plot#, show
+# from pylab import plot, show
 from numpy import subtract, dot, sqrt
 from random import random, seed
 import time
 import cPickle as pickle
+
+# TODO
+# <dcrane> nilg: I'm getting an error at the "test cover tree find method" if I
+#          change n_points in test_covertree.py (1000 is fine, 2000 is bad, 999
+#          is fine, 998 is bad)                                           [08:18]
+# <dcrane> also if you change the knn query to something besides (.5,.5), like
+#          (.152,.252), it fails                                          [08:31]
 
 def distance(p, q):
     # print "distance"

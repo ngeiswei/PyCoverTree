@@ -143,33 +143,32 @@ class CoverTree:
     # Output: nothing
     #
     def insert_iter(self, p):
-        Qi_next = [self.root]
-        Qi_next_p_ds = [self.distance(p, self.root.data)]
+        Qi = [self.root]
+        Qi_p_ds = [self.distance(p, self.root.data)]
         i = self.maxlevel
         while True:
-            Qi = Qi_next
-            Qi_p_ds = Qi_next_p_ds
             # get the children of the current level
             # and the distance of the all children
             Q, Q_p_ds = self.getChildrenDist(p, Qi, Qi_p_ds, i)
-            d_p_Q = min(Q_p_ds) if Q_p_ds else sys.float_info.max
-        
+            d_p_Q = min(Q_p_ds)
+
             if d_p_Q == 0.0:    # already there no need to insert
                 return
             elif d_p_Q > self.base**i: # we found the parent level
-                break
-            else: # d_p_Q <= self.base**i
-                #construct Q_i-1
+                pi = i + 1
+                # choose the parent and insert p
+                possParents = [q for q, d in zip(Qi, Qi_p_ds)
+                               if d <= self.base**pi]
+                choice(possParents).addChild(Node(p), pi)
+                # update self.minlevel
+                self.minlevel = min(self.minlevel, pi)
+                return
+            else: # d_p_Q <= self.base**i, keep iterating
+                # construct Q_i-1
                 zn = [(q, d) for q, d in zip(Q, Q_p_ds) if d <= self.base**i]
-                Qi_next = [q for q, _ in zn]
-                Qi_next_p_ds = [d for _, d in zn]
+                Qi = [q for q, _ in zn]
+                Qi_p_ds = [d for _, d in zn]
                 i -= 1
-
-        pi = i + 1              # parent level
-        self.minlevel = min(self.minlevel, pi) # update self.minlevel
-        
-        possParents = [q for q, d in zip(Qi, Qi_p_ds) if d <= self.base**pi]
-        choice(possParents).addChild(Node(p), pi)
 
 
     #
@@ -199,45 +198,44 @@ class CoverTree:
 
 
     #
-    # Overview:insert an element p in to the cover tree
+    # Overview: query the k-nearest points from p and then insert p in
+    # to the cover tree (at no additional cost)
     #
     # Input: point p
     #
     # Output: nothing
     #
     def knn_insert_iter(self, p, k):
-        Qi_next = [self.root]
-        Qi_next_p_ds = [self.distance(p, self.root.data)]
+        Qi = [self.root]
+        Qi_p_ds = [self.distance(p, self.root.data)]
         i = self.maxlevel
         found_parent = False
         while not found_parent or i >= self.minlevel:
-            Qi = Qi_next
-            Qi_p_ds = Qi_next_p_ds
             # get the children of the current level
-            # and the distance of the all children
+            # and the distance of all children
             Q, Q_p_ds = self.getChildrenDist(p, Qi, Qi_p_ds, i)
             d_k = nsmallest(k, Q_p_ds)
             d_p_Q_h = d_k[-1]
             d_p_Q_l = d_k[0]
         
             if not found_parent and d_p_Q_l > self.base**i:
-                found_parent = True
                 pi = i + 1
                 parent = choice([q for q, d in zip(Qi, Qi_p_ds)
                                  if d <= self.base**pi])
+                found_parent = True
 
-            #construct Q_i-1
+            # construct Q_i-1
             zn = [(q, d) for q, d in zip(Q, Q_p_ds)
                   if d <= d_p_Q_h + self.base**i]
-            Qi_next = [q for q, _ in zn]
-            Qi_next_p_ds = [d for _, d in zn]
+            Qi = [q for q, _ in zn]
+            Qi_p_ds = [d for _, d in zn]
             i -= 1
 
-        self.minlevel = min(self.minlevel, i + 1) # update self.minlevel
+        self.minlevel = min(self.minlevel, pi) # update self.minlevel
         parent.addChild(Node(p), pi)
 
-        #find the minimum
-        return self.args_min(Qi_next, Qi_next_p_ds, k)
+        # find the minimum
+        return self.args_min(Qi, Qi_p_ds, k)
 
 
     #
@@ -274,7 +272,7 @@ class CoverTree:
     # p
     #
     def getChildrenDist(self, p, Qi, Qi_p_ds, i):
-        Q = sum([j.getOnlyChildren(i) for j in Qi], [])
+        Q = sum([n.getOnlyChildren(i) for n in Qi], [])
         Q_p_ds = [self.distance(p, q.data) for q in Q]
         return Qi + Q, Qi_p_ds + Q_p_ds
 

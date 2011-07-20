@@ -133,6 +133,8 @@ def test_covertree():
 
     # test find
     print "==== Test cover tree find method ===="
+    nearest_test_query = ct.knn(query, 1)[0]
+    print "nearest_test_query =", nearest_test_query
     if ct.find(query):
         print "OK!"
     else:

@@ -265,12 +265,13 @@ class CoverTree:
 
     #
     # Overview: get the children of cover set Qi at level i and the
-    # distances of them with point p (both excluding Qi)
+    # distances of them with point p
     #
-    # Input: point p to compare the distance with Qi
+    # Input: point p to compare the distance with Qi's children, and
+    # Qi_p_ds the distances of all points in Qi with p
     #
     # Output: the children of Qi and the distances of them with point
-    # p (both excluding Qi)
+    # p
     #
     def getChildrenDist(self, p, Qi, Qi_p_ds, i):
         Q = sum([j.getOnlyChildren(i) for j in Qi], [])

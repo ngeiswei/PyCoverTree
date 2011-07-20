@@ -16,8 +16,8 @@
 
 from covertree import CoverTree
 from naiveknn import knn
-from pylab import sqrt, dot, plot#, show
-from numpy import subtract
+# from pylab import sqrt, dot, plot#, show
+from numpy import subtract, dot, sqrt
 from random import random, seed
 import time
 import cPickle as pickle
@@ -32,7 +32,7 @@ def distance(p, q):
 def test_covertree():
     seed(1)
 
-    n_points = 1000
+    n_points = 2000
 
     k = 5
     
@@ -97,10 +97,11 @@ def test_covertree():
         print "Cover tree query is", n_t/ct_t, "faster"
 
 
-    plot(pts[0], pts[1], 'rx')
-    plot([query[0]], [query[1]], 'go')
-    plot([naive_results[0][0]], [naive_results[0][1]], 'y^')
-    plot([results[0][0]], [results[0][1]], 'mo')
+    # you need pylab for that
+    # plot(pts[0], pts[1], 'rx')
+    # plot([query[0]], [query[1]], 'go')
+    # plot([naive_results[0][0]], [naive_results[0][1]], 'y^')
+    # plot([results[0][0]], [results[0][1]], 'mo')
 
     # test knn_insert
     print "==== Test knn_insert method ===="

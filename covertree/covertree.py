@@ -13,7 +13,14 @@
 # report.
 
 from random import choice
-from heapq import nsmallest 
+from heapq import nsmallest
+from itertools import product
+from collections import Counter
+
+# method that returns true iff only one element of the container is True
+def unique(container):
+    return Counter(container).get(True, 0) == 1
+
 
 # the Node representation of the data
 class Node:
@@ -301,14 +308,14 @@ class CoverTree:
     #
     # Overview:recursively build printHash (helper function for writeDotty)
     #
-    # Input: Q, level
+    # Input: C, level
     #
-    def writeDotty_rec(self, outputFile, Q, level):
+    def writeDotty_rec(self, outputFile, C, level):
         if(level < self.minlevel):
             return
 
         children = []
-        for p in Q:
+        for p in C:
             childs = p.getChildren(level)
 
             for i in childs:
@@ -321,3 +328,53 @@ class CoverTree:
         
         self.writeDotty_rec(outputFile, children, level-1)
 
+
+    # check if the tree satisfies all invariants
+    def check_invariants(self):
+        return self.check_nesting() and \
+            self.check_covering_tree() and \
+            self.check_seperation()
+
+
+    # check if my_invariant is satisfied:
+    # C_i denotes the set of nodes at level i
+    # for all i, my_invariant(C_i, C_{i-1})
+    def check_my_invariant(self, my_invariant):
+        C = [self.root]
+        for i in reversed(xrange(self.minlevel, self.maxlevel + 1)):        
+            C_next = sum([p.getChildren(i) for p in C], [])
+            if not my_invariant(C, C_next, i):
+                return False
+            C = C_next
+        return True
+        
+    
+    # check if the invariant nesting is satisfied:
+    # C_i is a subset of C_{i-1}
+    def nesting(self, C, C_next, _):
+        return set(C) <= set(C_next)
+
+    def check_nesting(self):
+        return self.check_my_invariant(self.nesting)
+        
+    
+    # check if the invariant covering tree is satisfied
+    # for all p in C_{i-1} there exists a q in C_i so that
+    # d(p, q) <= base^i and exactly one such q is a parent of p
+    def covering_tree(self, C, C_next, i):
+        return all(unique(self.distance(p.data, q.data) <= self.base**i
+                          and p in q.getChildren(i)
+                          for q in C)
+                   for p in C_next)
+
+    def check_covering_tree(self):
+        return self.check_my_invariant(self.covering_tree)
+
+    # check if the invariant seperation is satisfied
+    # for all p, q in C_i, d(p, q) > base^i
+    def seperation(self, C, _, i):
+        return all(self.distance(p.data, q.data) > self.base**i
+                   for p, q in product(C, C) if p != q)
+
+    def check_seperation(self):
+        return self.check_my_invariant(self.seperation)

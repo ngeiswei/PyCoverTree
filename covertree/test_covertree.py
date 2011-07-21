@@ -39,6 +39,9 @@ def distance(p, q):
 def test_covertree():
     seed(28)
 
+    total_tests = 0
+    passed_tests = 0
+    
     n_points = 3
 
     k = 5
@@ -56,6 +59,14 @@ def test_covertree():
     b_t = gt() - t
     print "Building time:", b_t, "seconds"
 
+    print "==== Check that all cover tree invariants are satisfied ===="
+    if ct.check_invariants():
+        print "OK!"
+        passed_tests += 1
+    else:
+        print "NOT OK!"
+    total_tests += 1
+    
     print "==== Write test1.dot, dotty file of the built tree ===="
     with open("test1.dot", "w") as testDottyFile1:
         ct.writeDotty(testDottyFile1)
@@ -106,6 +117,8 @@ def test_covertree():
         print "=="
         print naive_results
         print "Cover tree query is", n_t/ct_t, "faster"
+        passed_tests += 1
+    total_tests += 1
 
 
     # you need pylab for that
@@ -133,7 +146,17 @@ def test_covertree():
         print "=="
         print naive_results
         print "Cover tree query is", n_t/ct_t, "faster"
-    
+        passed_tests += 1
+    total_tests += 1
+
+
+    print "==== Check that all cover tree invariants are satisfied ===="
+    if ct.check_invariants():
+        print "OK!"
+        passed_tests += 1
+    else:
+        print "NOT OK!"
+    total_tests += 1
 
     print "==== Write test2.dot, dotty file of the built tree after knn_insert ===="
     with open("test2.dot", "w") as testDottyFile2:
@@ -145,8 +168,10 @@ def test_covertree():
     print "nearest_test_query =", nearest_test_query
     if ct.find(query):
         print "OK!"
+        passed_tests += 1
     else:
         print "NOT OK!"
+    total_tests += 1
 
     # printDotty prints the tree that was generated in dotty format,
     # for more info on the format, see http://graphviz.org/
@@ -154,6 +179,8 @@ def test_covertree():
 
     # show()
 
+    print passed_tests, "tests out of", total_tests, "have passed"
+    
 
 if __name__ == '__main__':
     test_covertree()

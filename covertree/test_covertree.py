@@ -37,9 +37,9 @@ def distance(p, q):
     return sqrt(dot(x, x))
 
 def test_covertree():
-    seed(1)
+    seed(28)
 
-    n_points = 2000
+    n_points = 3
 
     k = 5
     
@@ -56,6 +56,10 @@ def test_covertree():
     b_t = gt() - t
     print "Building time:", b_t, "seconds"
 
+    print "==== Write test1.dot, dotty file of the built tree ===="
+    with open("test1.dot", "w") as testDottyFile1:
+        ct.writeDotty(testDottyFile1)
+    
     print "==== Test saving/loading (via pickle)"
     ctFileName = "test.ct"
     print "Save cover tree under", ctFileName
@@ -131,6 +135,10 @@ def test_covertree():
         print "Cover tree query is", n_t/ct_t, "faster"
     
 
+    print "==== Write test2.dot, dotty file of the built tree after knn_insert ===="
+    with open("test2.dot", "w") as testDottyFile2:
+        ct.writeDotty(testDottyFile2)
+        
     # test find
     print "==== Test cover tree find method ===="
     nearest_test_query = ct.knn(query, 1)[0]

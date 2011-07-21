@@ -12,10 +12,8 @@
 # If you use this code in your research, kindly refer to the technical
 # report.
 
-from copy import deepcopy
 from random import choice
 from heapq import nsmallest 
-import sys
 
 # the Node representation of the data
 class Node:
@@ -85,7 +83,7 @@ class CoverTree:
         self.minlevel = maxlevel # the minlevel will adjust automatically
         self.base = base
         # for printDotty
-        self.printHash = {}
+        self.__printHash__ = set()
 
 
     #
@@ -289,46 +287,37 @@ class CoverTree:
         return [q.data for q, _ in z]
 
     #
-    #Overview:print to the terminal the dot representation
-    #  of the stuff
+    # Overview: write to a file the dot representation
     #
-    #Input: None
-    #Output: Dotty representation of the cover tree printed to the screen
+    # Input: None
+    # Output: 
     #
-    def printDotty(self):
-        print "digraph {"
-        self.printHash = {}
-        self.printTree([self.root], self.maxlevel)
-
-        for i in self.printHash.keys():
-            print i
-        print "}"
+    def writeDotty(self, outputFile):
+        outputFile.write("digraph {\n")
+        self.writeDotty_rec(outputFile, [self.root], self.maxlevel)
+        outputFile.write("}")
 
 
     #
-    #Overview:recursively print the tree (helper function for printDotty)
+    # Overview:recursively build printHash (helper function for writeDotty)
     #
-    #Input: T ???
-    #Output: Dotty representation of the cover tree printed to the screen
+    # Input: Q, level
     #
-    def printTree(self, T, level):
+    def writeDotty_rec(self, outputFile, Q, level):
         if(level < self.minlevel):
             return
 
-        thechildren = []
-        for p in T:
-            childs = deepcopy(p.getChildren(level))
+        children = []
+        for p in Q:
+            childs = p.getChildren(level)
 
-            for i in p.getChildren(level):
-                # This piece of code is not used
-                # if(level < 0):
-                #     mylev = "_" + str(abs(level))
-                # else:
-                #     mylev = str(level)
+            for i in childs:
+                outputFile.write("\"lev:" +str(level) + " "
+                                 + str(p.data) + "\"->\"lev:"
+                                 + str(level-1) + " "
+                                 + str(i.data) + "\"\n")
 
-                self.printHash["\"lev:" +str(level) + " " + str(p.data) + "\"->\"lev:" + str(level-1) + " " + str(i.data) + "\""] = 0
-
-            thechildren.extend(childs)
+            children.extend(childs)
         
-        self.printTree(thechildren, level-1)
+        self.writeDotty_rec(outputFile, children, level-1)
 

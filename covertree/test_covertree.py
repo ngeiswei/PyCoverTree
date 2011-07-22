@@ -37,12 +37,12 @@ def distance(p, q):
     return sqrt(dot(x, x))
 
 def test_covertree():
-    seed(28)
+    seed(1)
 
     total_tests = 0
     passed_tests = 0
     
-    n_points = 3
+    n_points = 400
 
     k = 5
     
@@ -131,7 +131,6 @@ def test_covertree():
     print "==== Test knn_insert method ===="
     t = gt()
     results2 = ct.knn_insert(query, k)
-    # print "result =", result
     ct_t = gt() - t
     print "Time to run a cover tree " + str(k) + "-nn query:", ct_t, "seconds"
     
@@ -148,7 +147,6 @@ def test_covertree():
         print "Cover tree query is", n_t/ct_t, "faster"
         passed_tests += 1
     total_tests += 1
-
 
     print "==== Check that all cover tree invariants are satisfied ===="
     if ct.check_invariants():

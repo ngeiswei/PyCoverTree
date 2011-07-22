@@ -30,14 +30,14 @@ class Node:
         self.children = {}      # dict mapping level and children
         self.parent = None
 
-    # addChild adds a child to a particular Node and a given level
-    def addChild(self, child, level):
+    # addChild adds a child to a particular Node and a given level i
+    def addChild(self, child, i):
         try:
-            # in case level is not in self.children yet
-            if(child not in self.children[level]):
-                self.children[level].append(child)
+            # in case i is not in self.children yet
+            if(child not in self.children[i]):
+                self.children[i].append(child)
         except(KeyError):
-            self.children[level] = [child]
+            self.children[i] = [child]
         child.parent = self
 
     # getChildren gets the children of a Node at a particular level
@@ -62,7 +62,6 @@ class Node:
 
     def removeConnections(self, level):
         if(self.parent != None):
-            #print self.parent.children
             self.parent.children[level+1].remove(self)
             self.parent = None
 
@@ -132,12 +131,10 @@ class CoverTree:
     # Overview: find an element in the tree
     #
     # Input: Node p
-    # Output: True if p is found False otherwise and the level of p
+    # Output: True if p is found False otherwise
     #
     def find(self, p):
-        return self.find_rec(p, [self.root],
-                             [self.distance(p, self.root.data)],
-                             self.maxlevel)
+        return self.distance(self.knn(p, 1)[0], p) == 0
 
 
     #
@@ -157,24 +154,31 @@ class CoverTree:
             Q, Q_p_ds = self.getChildrenDist(p, Qi, Qi_p_ds, i)
             d_p_Q = min(Q_p_ds)
 
-            if d_p_Q == 0.0:    # already there no need to insert
+            if d_p_Q == 0.0:    # already there, no need to insert
                 return
-            elif d_p_Q > self.base**i: # we found the parent level
-                pi = i + 1
-                # choose the parent and insert p
-                possParents = [q for q, d in zip(Qi, Qi_p_ds)
-                               if d <= self.base**pi]
-                choice(possParents).addChild(Node(p), pi)
-                # update self.minlevel
-                self.minlevel = min(self.minlevel, pi)
-                return
+            elif d_p_Q > self.base**i: # the found parent should be right
+                break
             else: # d_p_Q <= self.base**i, keep iterating
+
+                # find parent
+                if min(Qi_p_ds) <= self.base**i:
+                    parent = choice([q for q, d in zip(Qi, Qi_p_ds)
+                                     if d <= self.base**i])
+                    pi = i
+                
                 # construct Q_i-1
-                zn = [(q, d) for q, d in zip(Q, Q_p_ds) if d <= self.base**i]
+                zn = [(q, d) for q, d in zip(Q, Q_p_ds)
+                      if d <= self.base**i]
                 Qi = [q for q, _ in zn]
                 Qi_p_ds = [d for _, d in zn]
                 i -= 1
 
+        # insert p
+        parent.addChild(Node(p), pi)
+        # update self.minlevel
+        self.minlevel = min(self.minlevel, pi-1)
+
+                
 
     #
     # Overview:get the nearest neighbor, iterative
@@ -215,19 +219,27 @@ class CoverTree:
         Qi_p_ds = [self.distance(p, self.root.data)]
         i = self.maxlevel
         found_parent = False
-        while not found_parent or i >= self.minlevel:
+        already_there = False
+        while (not already_there and not found_parent) or i >= self.minlevel:
             # get the children of the current level
             # and the distance of all children
             Q, Q_p_ds = self.getChildrenDist(p, Qi, Qi_p_ds, i)
             d_k = nsmallest(k, Q_p_ds)
             d_p_Q_h = d_k[-1]
             d_p_Q_l = d_k[0]
-        
-            if not found_parent and d_p_Q_l > self.base**i:
-                pi = i + 1
-                parent = choice([q for q, d in zip(Qi, Qi_p_ds)
-                                 if d <= self.base**pi])
+
+            if d_p_Q_l == 0.0:    # already there, no need to insert
+                already_there = True
+            elif not already_there and \
+                    not found_parent and \
+                    d_p_Q_l > self.base**(i-1):
                 found_parent = True
+                
+            # remember potential parent
+            if min(Qi_p_ds) <= self.base**i:
+                parent = choice([q for q, d in zip(Qi, Qi_p_ds)
+                                 if d <= self.base**i])
+                pi = i
 
             # construct Q_i-1
             zn = [(q, d) for q, d in zip(Q, Q_p_ds)
@@ -236,34 +248,14 @@ class CoverTree:
             Qi_p_ds = [d for _, d in zn]
             i -= 1
 
-        self.minlevel = min(self.minlevel, pi) # update self.minlevel
-        parent.addChild(Node(p), pi)
-
+        # insert p
+        if not already_there and found_parent:
+            parent.addChild(Node(p), pi)
+            # update self.minlevel
+            self.minlevel = min(self.minlevel, pi - 1)
+        
         # find the minimum
         return self.args_min(Qi, Qi_p_ds, k)
-
-
-    #
-    # Overview: find an element given a particular level, recursive
-    #
-    # Input: point p to find, cover set Qi, current level i
-    #
-    # Output: True if p is found False otherwise and the level of p
-    #
-    def find_rec(self, p, Qi, Qi_p_ds, i):
-        #get the children of the current level
-        Q, Q_p_ds = self.getChildrenDist(p, Qi, Qi_p_ds, i)
-        zn = [(q, d) for q, d in zip(Q, Q_p_ds) if d <= self.base**i]
-        Qi_next = [q for q, _ in zn]
-        Qi_next_p_ds = [d for _, d in zn]
-        d_p_Qi = min(Qi_p_ds)
-
-        if(i < self.minlevel):
-            return False, None
-        elif(d_p_Qi == 0):
-            return True, i
-        else:
-            return self.find_rec(p, Qi_next, Qi_next_p_ds, i-1)
 
 
     #
@@ -308,25 +300,25 @@ class CoverTree:
     #
     # Overview:recursively build printHash (helper function for writeDotty)
     #
-    # Input: C, level
+    # Input: C, i is the level
     #
-    def writeDotty_rec(self, outputFile, C, level):
-        if(level < self.minlevel):
+    def writeDotty_rec(self, outputFile, C, i):
+        if(i == self.minlevel):
             return
 
         children = []
         for p in C:
-            childs = p.getChildren(level)
+            childs = p.getChildren(i)
 
-            for i in childs:
-                outputFile.write("\"lev:" +str(level) + " "
+            for q in childs:
+                outputFile.write("\"lev:" +str(i) + " "
                                  + str(p.data) + "\"->\"lev:"
-                                 + str(level-1) + " "
-                                 + str(i.data) + "\"\n")
+                                 + str(i-1) + " "
+                                 + str(q.data) + "\"\n")
 
             children.extend(childs)
         
-        self.writeDotty_rec(outputFile, children, level-1)
+        self.writeDotty_rec(outputFile, children, i-1)
 
 
     # check if the tree satisfies all invariants
@@ -344,6 +336,7 @@ class CoverTree:
         for i in reversed(xrange(self.minlevel, self.maxlevel + 1)):        
             C_next = sum([p.getChildren(i) for p in C], [])
             if not my_invariant(C, C_next, i):
+                print "At level", i, "the invariant", my_invariant, "is false"
                 return False
             C = C_next
         return True

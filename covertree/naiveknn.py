@@ -8,7 +8,7 @@
 
 from heapq import nsmallest 
 
-def knn(pt, pts, dist_f, k = 1):
+def knn(k, pt, pts, dist_f):
     '''Return the k-nearest points in pts to pt using a naive
     algorithm. dist_f is a function that computes the distance between
     2 points'''
@@ -16,4 +16,4 @@ def knn(pt, pts, dist_f, k = 1):
 
 def nn(pt, pts, dist_f):
     '''Like knn but return the nearest point in pts'''
-    return knn(pt, pts, dist_f)[0]
+    return knn(1, pt, pts, dist_f)[0]

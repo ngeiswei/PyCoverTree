@@ -22,13 +22,6 @@ from random import random, seed
 import time
 import cPickle as pickle
 
-# TODO
-# <dcrane> nilg: I'm getting an error at the "test cover tree find method" if I
-#          change n_points in test_covertree.py (1000 is fine, 2000 is bad, 999
-#          is fine, 998 is bad)                                           [08:18]
-# <dcrane> also if you change the knn query to something besides (.5,.5), like
-#          (.152,.252), it fails                                          [08:31]
-
 def distance(p, q):
     # print "distance"
     # print "p =", p
@@ -94,14 +87,14 @@ def test_covertree():
 
     # naive nearest neighbor
     t = gt()
-    naive_results = knn(query, pts, distance, k)
+    naive_results = knn(k, query, pts, distance)
     # print "resultNN =", resultNN
     n_t = gt() - t
     print "Time to run a naive " + str(k) + "-nn query:", n_t, "seconds"
 
     #cover-tree nearest neighbor
     t = gt()
-    results = ct.knn(query, k)
+    results = ct.knn(k, query, True)
     # print "result =", result
     ct_t = gt() - t
     print "Time to run a cover tree " + str(k) + "-nn query:", ct_t, "seconds"
@@ -130,7 +123,7 @@ def test_covertree():
     # test knn_insert
     print "==== Test knn_insert method ===="
     t = gt()
-    results2 = ct.knn_insert(query, k)
+    results2 = ct.knn_insert(k, query, True)
     ct_t = gt() - t
     print "Time to run a cover tree " + str(k) + "-nn query:", ct_t, "seconds"
     
@@ -162,8 +155,6 @@ def test_covertree():
         
     # test find
     print "==== Test cover tree find method ===="
-    nearest_test_query = ct.knn(query, 1)[0]
-    print "nearest_test_query =", nearest_test_query
     if ct.find(query):
         print "OK!"
         passed_tests += 1

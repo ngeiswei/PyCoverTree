@@ -113,19 +113,19 @@ class CoverTree:
     # Output: Nearest points with respect to the distance metric
     #          self.distance()
     #
-    def knn_insert(self, p, k):
-        return self.knn_insert_iter(p, k)
+    def knn_insert(self, k, p, only_points = False):
+        return self._result_(self.knn_insert_iter(k, p), only_points)
         
     #
-    # Overview: get the k-nearest neighbors of an element
+    # Overview: get the k-nearest neighbors and their distances of an element
     #
     # Input: point p, and k the number of nearest neighbors to return
     #
     # Output: Nearest points with respect to the distance metric
     #          self.distance()
     #
-    def knn(self, p, k):
-        return self.knn_iter(p, k)
+    def knn(self, k, p, only_points = False):
+        return self._result_(self.knn_iter(k, p), only_points)
 
     #
     # Overview: find an element in the tree
@@ -134,7 +134,7 @@ class CoverTree:
     # Output: True if p is found False otherwise
     #
     def find(self, p):
-        return self.distance(self.knn(p, 1)[0], p) == 0
+        return self.distance(self.knn(1, p, True)[0], p) == 0
 
 
     #
@@ -145,14 +145,13 @@ class CoverTree:
     # Output: nothing
     #
     def insert_iter(self, p):
-        Qi = [self.root]
-        Qi_p_ds = [self.distance(p, self.root.data)]
+        Qi_p_ds = [(self.root, self.distance(p, self.root.data))]
         i = self.maxlevel
         while True:
             # get the children of the current level
             # and the distance of the all children
-            Q, Q_p_ds = self.getChildrenDist(p, Qi, Qi_p_ds, i)
-            d_p_Q = min(Q_p_ds)
+            Q_p_ds = self._getChildrenDist_(p, Qi_p_ds, i)
+            d_p_Q = self._min_ds_(Q_p_ds)
 
             if d_p_Q == 0.0:    # already there, no need to insert
                 return
@@ -161,16 +160,12 @@ class CoverTree:
             else: # d_p_Q <= self.base**i, keep iterating
 
                 # find parent
-                if min(Qi_p_ds) <= self.base**i:
-                    parent = choice([q for q, d in zip(Qi, Qi_p_ds)
-                                     if d <= self.base**i])
+                if self._min_ds_(Qi_p_ds) <= self.base**i:
+                    parent = choice([q for q, d in Qi_p_ds if d <= self.base**i])
                     pi = i
                 
                 # construct Q_i-1
-                zn = [(q, d) for q, d in zip(Q, Q_p_ds)
-                      if d <= self.base**i]
-                Qi = [q for q, _ in zn]
-                Qi_p_ds = [d for _, d in zn]
+                Qi_p_ds = [(q, d) for q, d in Q_p_ds if d <= self.base**i]
                 i -= 1
 
         # insert p
@@ -178,7 +173,6 @@ class CoverTree:
         # update self.minlevel
         self.minlevel = min(self.minlevel, pi-1)
 
-                
 
     #
     # Overview:get the nearest neighbor, iterative
@@ -187,23 +181,19 @@ class CoverTree:
     #
     # Output: the nearest Node 
     #
-    def knn_iter(self, p, k):
-        Qi = [self.root]
-        Qi_p_ds = [self.distance(p, self.root.data)]
+    def knn_iter(self, k, p):
+        Qi_p_ds = [(self.root, self.distance(p, self.root.data))]
         for i in reversed(xrange(self.minlevel, self.maxlevel + 1)):
-            #get the children of the current Q and
-            #the best distance at the same time
-            Q, Q_p_ds = self.getChildrenDist(p, Qi, Qi_p_ds, i)
-            d_p_Q = nsmallest(k, Q_p_ds)[-1]
+            # get the children of the current Qi_p_ds and
+            # the best distance at the same time
+            Q_p_ds = self._getChildrenDist_(p, Qi_p_ds, i)
+            _, d_p_Q = self._kmin_p_ds_(k, Q_p_ds)[-1]
 
             #create the next set
-            zn = [(q, d) for q, d in zip(Q, Q_p_ds)
-                  if d <= d_p_Q + self.base**i]
-            Qi = [q for q, _ in zn]
-            Qi_p_ds = [d for _, d in zn]
+            Qi_p_ds = [(q, d) for q, d in Q_p_ds if d <= d_p_Q + self.base**i]
 
         #find the minimum
-        return self.args_min(Qi, Qi_p_ds, k)
+        return self._kmin_p_data_ds_(k, Qi_p_ds)
 
 
     #
@@ -214,19 +204,18 @@ class CoverTree:
     #
     # Output: nothing
     #
-    def knn_insert_iter(self, p, k):
-        Qi = [self.root]
-        Qi_p_ds = [self.distance(p, self.root.data)]
+    def knn_insert_iter(self, k, p):
+        Qi_p_ds = [(self.root, self.distance(p, self.root.data))]
         i = self.maxlevel
         found_parent = False
         already_there = False
         while (not already_there and not found_parent) or i >= self.minlevel:
             # get the children of the current level
             # and the distance of all children
-            Q, Q_p_ds = self.getChildrenDist(p, Qi, Qi_p_ds, i)
-            d_k = nsmallest(k, Q_p_ds)
-            d_p_Q_h = d_k[-1]
-            d_p_Q_l = d_k[0]
+            Q_p_ds = self._getChildrenDist_(p, Qi_p_ds, i)
+            d_k = self._kmin_p_ds_(k, Q_p_ds)
+            _, d_p_Q_h = d_k[-1]
+            _, d_p_Q_l = d_k[0]
 
             if d_p_Q_l == 0.0:    # already there, no need to insert
                 already_there = True
@@ -236,16 +225,12 @@ class CoverTree:
                 found_parent = True
                 
             # remember potential parent
-            if min(Qi_p_ds) <= self.base**i:
-                parent = choice([q for q, d in zip(Qi, Qi_p_ds)
-                                 if d <= self.base**i])
+            if self._min_ds_(Qi_p_ds) <= self.base**i:
+                parent = choice([q for q, d in Qi_p_ds if d <= self.base**i])
                 pi = i
 
             # construct Q_i-1
-            zn = [(q, d) for q, d in zip(Q, Q_p_ds)
-                  if d <= d_p_Q_h + self.base**i]
-            Qi = [q for q, _ in zn]
-            Qi_p_ds = [d for _, d in zn]
+            Qi_p_ds = [(q, d) for q, d in Q_p_ds if d <= d_p_Q_h + self.base**i]
             i -= 1
 
         # insert p
@@ -255,7 +240,7 @@ class CoverTree:
             self.minlevel = min(self.minlevel, pi - 1)
         
         # find the minimum
-        return self.args_min(Qi, Qi_p_ds, k)
+        return self._kmin_p_data_ds_(k, Qi_p_ds)
 
 
     #
@@ -268,23 +253,35 @@ class CoverTree:
     # Output: the children of Qi and the distances of them with point
     # p
     #
-    def getChildrenDist(self, p, Qi, Qi_p_ds, i):
-        Q = sum([n.getOnlyChildren(i) for n in Qi], [])
-        Q_p_ds = [self.distance(p, q.data) for q in Q]
-        return Qi + Q, Qi_p_ds + Q_p_ds
-
+    def _getChildrenDist_(self, p, Qi_p_ds, i):
+        Q = sum([n.getOnlyChildren(i) for n, _ in Qi_p_ds], [])
+        Q_p_ds = [(q, self.distance(p, q.data)) for q in Q]
+        return Qi_p_ds + Q_p_ds
 
 
     #
-    # Overview:get the argument that has the minimum distance
+    # Overview: get a list of pairs <point, distance> with the k-min distances
     #
     # Input: Input cover set Q, distances of all nodes of Q to some point
-    # Output: minimum distance points in Q to that point
+    # Output: list of pairs 
     #
-    def args_min(self, Q, Q_p_ds, k):
-        z = nsmallest(k, zip(Q, Q_p_ds), lambda x: x[1])
-        return [q.data for q, _ in z]
+    def _kmin_p_ds_(self, k, Q_p_ds):
+        return nsmallest(k, Q_p_ds, lambda x: x[1])
 
+    # like above but subtitute the points by their data
+    def _kmin_p_data_ds_(self, k, Q_p_ds):
+        return [(q.data, d) for q, d in self._kmin_p_ds_(k, Q_p_ds)]
+
+    # return the minimum distance of Q_p_ds
+    def _min_ds_(self, Q_p_ds):
+        return self._kmin_p_ds_(1, Q_p_ds)[0][1]
+
+    def _result_(self, res, only_points):
+        if only_points:
+            return [p for p, _ in res]
+        else:
+            return res
+    
     #
     # Overview: write to a file the dot representation
     #

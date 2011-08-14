@@ -106,15 +106,16 @@ class CoverTree:
 
             
     #
-    # Overview: behaves like knn(p, k) and insert(p). This method exists for efficiency reason
+    # Overview: behaves like knn(p, k) and insert(p). This method
+    # exists for efficiency reason
     #
     # Input: point p, and k the number of nearest neighbors to return
     #
     # Output: Nearest points with respect to the distance metric
-    #          self.distance()
+    #          self.distance() and optionally their distances
     #
-    def knn_insert(self, k, p, only_points = False):
-        return self._result_(self.knn_insert_iter(k, p), only_points)
+    def knn_insert(self, k, p, without_distance = False):
+        return self._result_(self.knn_insert_iter(k, p), without_distance)
         
     #
     # Overview: get the k-nearest neighbors and their distances of an element
@@ -122,10 +123,10 @@ class CoverTree:
     # Input: point p, and k the number of nearest neighbors to return
     #
     # Output: Nearest points with respect to the distance metric
-    #          self.distance()
+    #          self.distance() and optionally their distances
     #
-    def knn(self, k, p, only_points = False):
-        return self._result_(self.knn_iter(k, p), only_points)
+    def knn(self, k, p, without_distance = False):
+        return self._result_(self.knn_iter(k, p), without_distance)
 
     #
     # Overview: find an element in the tree
@@ -193,7 +194,7 @@ class CoverTree:
             Qi_p_ds = [(q, d) for q, d in Q_p_ds if d <= d_p_Q + self.base**i]
 
         #find the minimum
-        return self._kmin_p_data_ds_(k, Qi_p_ds)
+        return self._kmin_p_ds_(k, Qi_p_ds)
 
 
     #
@@ -240,7 +241,7 @@ class CoverTree:
             self.minlevel = min(self.minlevel, pi - 1)
         
         # find the minimum
-        return self._kmin_p_data_ds_(k, Qi_p_ds)
+        return self._kmin_p_ds_(k, Qi_p_ds)
 
 
     #
@@ -258,7 +259,6 @@ class CoverTree:
         Q_p_ds = [(q, self.distance(p, q.data)) for q in Q]
         return Qi_p_ds + Q_p_ds
 
-
     #
     # Overview: get a list of pairs <point, distance> with the k-min distances
     #
@@ -268,19 +268,18 @@ class CoverTree:
     def _kmin_p_ds_(self, k, Q_p_ds):
         return nsmallest(k, Q_p_ds, lambda x: x[1])
 
-    # like above but subtitute the points by their data
-    def _kmin_p_data_ds_(self, k, Q_p_ds):
-        return [(q.data, d) for q, d in self._kmin_p_ds_(k, Q_p_ds)]
-
     # return the minimum distance of Q_p_ds
     def _min_ds_(self, Q_p_ds):
         return self._kmin_p_ds_(1, Q_p_ds)[0][1]
 
-    def _result_(self, res, only_points):
-        if only_points:
-            return [p for p, _ in res]
+    # format the final result. If without_distance is True then it
+    # returns only a list of data points, other it return a list of
+    # pairs <point.data, distance>
+    def _result_(self, res, without_distance):
+        if without_distance:
+            return [p.data for p, _ in res]
         else:
-            return res
+            return [(p.data, d) for p, d in res]
     
     #
     # Overview: write to a file the dot representation

@@ -16,6 +16,7 @@ from random import choice
 from heapq import nsmallest
 from itertools import product
 from collections import Counter
+import cStringIO
 
 # method that returns true iff only one element of the container is True
 def unique(container):
@@ -115,7 +116,11 @@ class CoverTree:
     #          self.distance() and optionally their distances
     #
     def knn_insert(self, k, p, without_distance = False):
-        return self._result_(self.knn_insert_iter(k, p), without_distance)
+        if self.root == None:
+            self.root = Node(p)
+            return []
+        else:
+            return self._result_(self.knn_insert_iter(k, p), without_distance)
         
     #
     # Overview: get the k-nearest neighbors and their distances of an element
@@ -315,6 +320,11 @@ class CoverTree:
             children.extend(childs)
         
         self.writeDotty_rec(outputFile, children, i-1)
+
+    def __str__(self):
+        output = cStringIO.StringIO()
+        self.writeDotty(output)
+        return output.getvalue()
 
 
     # check if the tree satisfies all invariants

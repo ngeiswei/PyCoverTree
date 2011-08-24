@@ -131,7 +131,10 @@ class CoverTree:
     #          self.distance() and optionally their distances
     #
     def knn(self, k, p, without_distance = False):
-        return self._result_(self.knn_iter(k, p), without_distance)
+        if self.root == None:
+            return []
+        else:
+            return self._result_(self.knn_iter(k, p), without_distance)
 
     #
     # Overview: find an element in the tree

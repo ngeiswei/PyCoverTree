@@ -16,6 +16,7 @@ from random import choice
 from heapq import nsmallest
 from itertools import product
 from collections import Counter
+from joblib import Parallel, delayed
 import cStringIO
 
 # method that returns true iff only one element of the container is True
@@ -77,18 +78,25 @@ class CoverTree:
     #
     # Overview: initalization method
     #
-    # Input: distance function, root, maxlevel, minlevel Here root is
-    #  a point, maxlevel is the largest number that we care about
+    # Input: distance function, root, maxlevel, minlevel, base, and
+    #  for parallel support jobs and min_len_parallel. Here root is a
+    #  point, maxlevel is the largest number that we care about
     #  (e.g. base^(maxlevel) should be our maximum number), just as
     #  base^(minlevel) should be the minimum distance between Nodes.
-    # Output:
     #
-    def __init__(self, distance, root = None, maxlevel = 10, base = 2):
+    #  In case parallel is enbaled (jobs > 1), min_len_parallel is the
+    #  minimum number of elements at a given level to have their
+    #  distances to the element to insert or query evaluated.
+    #
+    def __init__(self, distance, root = None, maxlevel = 10, base = 2,
+                 jobs = 1, min_len_parallel = 100):
         self.distance = distance
         self.root = root
         self.maxlevel = maxlevel
         self.minlevel = maxlevel # the minlevel will adjust automatically
         self.base = base
+        self.jobs = jobs
+        self.min_len_parallel = min_len_parallel
         # for printDotty
         self.__printHash__ = set()
 
@@ -264,7 +272,13 @@ class CoverTree:
     #
     def _getChildrenDist_(self, p, Qi_p_ds, i):
         Q = sum([n.getOnlyChildren(i) for n, _ in Qi_p_ds], [])
-        Q_p_ds = [(q, self.distance(p, q.data)) for q in Q]
+        if self.jobs > 1 and len(Q) >= self.min_len_parallel:
+            df = self.distance
+            ds = Parallel(n_jobs = self.jobs)(delayed(df)(p, q.data) for q in Q)
+            Q_p_ds = zip(Q, ds)
+        else:
+            Q_p_ds = [(q, self.distance(p, q.data)) for q in Q]
+        
         return Qi_p_ds + Q_p_ds
 
     #

@@ -348,7 +348,7 @@ class CoverTree:
     def check_invariants(self):
         return self.check_nesting() and \
             self.check_covering_tree() and \
-            self.check_seperation()
+            self.check_separation()
 
 
     # check if my_invariant is satisfied:
@@ -386,11 +386,11 @@ class CoverTree:
     def check_covering_tree(self):
         return self.check_my_invariant(self.covering_tree)
 
-    # check if the invariant seperation is satisfied
+    # check if the invariant separation is satisfied
     # for all p, q in C_i, d(p, q) > base^i
-    def seperation(self, C, _, i):
+    def separation(self, C, _, i):
         return all(self.distance(p.data, q.data) > self.base**i
                    for p, q in product(C, C) if p != q)
 
-    def check_seperation(self):
-        return self.check_my_invariant(self.seperation)
+    def check_separation(self):
+        return self.check_my_invariant(self.separation)
